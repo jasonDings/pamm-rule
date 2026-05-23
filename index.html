@@ -353,7 +353,7 @@ Performance Fee   = max(0, Unit Price − HWM) × Redeem Units × Fee Rate
     </ul>
 
     <!-- Flow 2 估值 -->
-    <h3>② 每日估值（00:00:00）</h3>
+    <h3>② 每日 unit price 更新</h3>
     <div class="flow">
       <svg viewBox="0 0 1080 170" width="100%" xmlns="http://www.w3.org/2000/svg">
         <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
@@ -374,7 +374,7 @@ Performance Fee   = max(0, Unit Price − HWM) × Redeem Units × Fee Rate
     </div>
     <ul>
       <li><b>淨值來源</b>：Phase 1 直接以 broker 主帳戶 equity 為準。例：rollover 時 equity = $200,000、total units = 160,000 → unit price = 200,000 ÷ 160,000 = <b>$1.25</b>。</li>
-      <li><b>對賬（白話）</b>：拿「系統 ledger 算的總值」對「broker equity」。例：系統算 $200,000、broker 顯示 $199,940（差 $60，多半是 swap/commission），差 0.03% 在容差內。</li>
+      <li><b>對賬（白話）</b>：拿「系統 ledger 算的總值」對「broker equity」。例：系統算 $200,000、broker 顯示 $199,940（差 $60，多半是 swap/commission），差 0.03% 在容差內。<b>若差距超出容差、兩邊對不上</b>，系統會發出告警，並可暫停出入金、轉人工查核，確認無誤後才繼續。</li>
     </ul>
 
     <!-- Flow 3 分潤 -->
