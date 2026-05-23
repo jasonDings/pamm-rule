@@ -45,8 +45,8 @@
   h2{font-size:22px;margin:4px 0 6px;display:flex;align-items:center;gap:11px;color:var(--head);line-height:1.4;font-weight:700}
   h2 .num{background:var(--primary);color:#fff;font-size:14px;border-radius:9px;
     width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;flex:none}
-  h3{font-size:17.5px;margin:24px 0 8px;color:var(--head);font-weight:700}
-  h4{font-size:14.5px;margin:18px 0 5px;color:var(--teal);font-weight:700;letter-spacing:.02em}
+  h3{font-size:19px;margin:24px 0 8px;color:var(--head);font-weight:700}
+  h4{font-size:17.5px;margin:18px 0 5px;color:var(--teal);font-weight:700;letter-spacing:.02em}
   p{margin:10px 0}
   .lead{color:var(--muted);font-size:15px;margin-top:2px;line-height:1.8}
   ul,ol{margin:10px 0;padding-left:24px}
@@ -179,7 +179,7 @@
       <li>你賺賠多少，看「每 unit price」漲跌，不看某一張股票。</li>
     </ul>
 
-    <h4>把切份視覺化</h4>
+    <h4>Pool 切成 units 的示意圖</h4>
     <p>沿用上面的數字（pool $200,000、160,000 units、unit price $1.25）——同一個 pool 切成 units，大家按持份比例擁有；D 的 0.5% 小到幾乎看不見：</p>
     <div class="flow">
       <svg viewBox="0 0 960 290" width="100%" xmlns="http://www.w3.org/2000/svg">
@@ -221,7 +221,7 @@
       </svg>
     </div>
 
-    <p>我們的產品一模一樣，但要記住<b>兩層分開</b>：<b>畫面層</b>用「symbol + lots」呈現（讓投資人有在交易的感覺）；<b>核心層</b>用「fund unit + unit price」記帳（決定誰賺賠多少）。畫面上「你持有 EUR/USD 0.05 lots」只是把 pool 倉位 × 你的持份「算給你看」，<b>不是你在 broker 真的有一筆 0.05 lots 的單</b>。</p>
+    <p>回到我們的產品，關鍵是<b>把兩層分開看</b>：<b>畫面層</b>用「symbol + lots」呈現，讓投資人有在交易的感覺；<b>核心層</b>用「fund unit + unit price」記帳，決定每個人實際賺賠多少。所以畫面上顯示「你持有 EUR/USD 0.05 lots」，其實只是把 pool 的倉位<b>按你的持份比例換算給你看</b>，並不是你在 broker 真的開了一筆 0.05 lots 的單。</p>
 
     <div class="grid2">
       <div class="card" style="margin:0;background:#fbfdff">
