@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tradingcup PAMM Phase1 instruction</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --ink:#2b3038; --muted:#69707c;
+    --line:#e7e9ee; --head:#33415f; --primary:#3a5bb0; --primary-soft:#eef1fa;
+    --teal:#2f897c; --teal-soft:#e9f5f2; --amber:#8f6207; --amber-soft:#f8f1e2;
+    --red:#c0473a; --red-soft:#fbece9; --code:#222934;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC",-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei",sans-serif;
+    line-height:1.85; font-size:16.5px; letter-spacing:.01em; -webkit-font-smoothing:antialiased;
+  }
+  header.top{
+    background:
+      radial-gradient(560px 320px at 90% -50%,rgba(47,137,124,.22),transparent 60%),
+      radial-gradient(640px 380px at 2% 135%,rgba(58,91,176,.20),transparent 60%),
+      linear-gradient(135deg,#eaf0fb,#e7f4f0);
+    color:var(--head); padding:50px 24px 42px; border-bottom:1px solid #dbe3f0;
+  }
+  .accent-bar{display:block;width:42px;height:4px;border-radius:3px;
+    background:linear-gradient(90deg,var(--primary),var(--teal));margin-bottom:16px}
+  .wrap{max-width:960px;margin:0 auto;padding:0 22px}
+  header.top h1{margin:0;font-size:33px;line-height:1.22;letter-spacing:.2px;font-weight:800;color:var(--head)}
+  header.top h1 .accent{background:linear-gradient(90deg,#3a5bb0,#2f897c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+  header.top p{margin:5px 0;opacity:.94;font-size:15px;line-height:1.7}
+  .pill{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.34);
+    padding:4px 11px;border-radius:999px;font-size:12.5px;margin:9px 7px 0 0}
+  nav.toc{position:sticky;top:0;z-index:20;background:rgba(243,247,252,.9);
+    backdrop-filter:blur(10px);border-bottom:1px solid #dbe3f0;box-shadow:0 1px 0 rgba(20,28,40,.03)}
+  nav.toc .wrap{display:flex;flex-wrap:wrap;gap:6px;padding:11px 22px}
+  nav.toc a{font-size:13px;color:var(--muted);text-decoration:none;padding:6px 13px;border-radius:999px;
+    border:1px solid #e3e9f4;background:rgba(255,255,255,.55);transition:.15s}
+  nav.toc a:hover{background:#fff;color:var(--primary);border-color:#c7d4ef;box-shadow:0 2px 7px rgba(20,28,40,.08)}
+  section{padding:30px 0 6px;scroll-margin-top:58px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:26px 30px;margin:20px 0;box-shadow:0 1px 3px rgba(20,28,40,.05)}
+  h2{font-size:22px;margin:4px 0 6px;display:flex;align-items:center;gap:11px;color:var(--head);line-height:1.4;font-weight:700}
+  h2 .num{background:var(--primary);color:#fff;font-size:14px;border-radius:9px;
+    width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  h3{font-size:17.5px;margin:24px 0 8px;color:var(--head);font-weight:700}
+  h4{font-size:14.5px;margin:18px 0 5px;color:var(--teal);font-weight:700;letter-spacing:.02em}
+  p{margin:10px 0}
+  .lead{color:var(--muted);font-size:15px;margin-top:2px;line-height:1.8}
+  ul,ol{margin:10px 0;padding-left:24px}
+  li{margin:7px 0}
+  li ul{margin:6px 0 2px;padding-left:20px}
+  li ul li{margin:4px 0}
+  table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px;line-height:1.6}
+  th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+  th{background:#eef1f6;color:var(--head);font-weight:600}
+  tr:nth-child(even) td{background:#fafbfc}
+  td.ok{color:var(--teal);font-weight:600}
+  td.no{color:var(--red);font-weight:600}
+  .formula{background:var(--code);color:#e7ecf3;border-radius:12px;padding:14px 18px;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;
+    line-height:1.85;overflow-x:auto;margin:14px 0;white-space:pre}
+  .formula .fh{color:#8ab4ff;font-weight:700}
+  .formula .fx{color:#8fce9b}
+  .term{display:grid;grid-template-columns:190px 1fr;gap:0;border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;margin:12px 0}
+  .term>div{padding:11px 14px;border-bottom:1px solid var(--line)}
+  .term>div:nth-child(odd){background:#f3f5f9;font-weight:600;color:var(--head)}
+  .term>div:last-child,.term>div:nth-last-child(2){border-bottom:none}
+  .callout{border-left:4px solid var(--primary);background:var(--primary-soft);
+    padding:13px 17px;border-radius:0 12px 12px 0;margin:16px 0;line-height:1.8}
+  .callout.key{border-color:var(--teal);background:var(--teal-soft)}
+  .callout.warn{border-color:var(--amber);background:var(--amber-soft)}
+  .callout.risk{border-color:var(--red);background:var(--red-soft)}
+  .callout b{color:inherit}
+  .flow{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:14px;padding:16px;background:#fbfcfd}
+  .flow svg{display:block;min-width:640px}
+  /* wireframe mockups */
+  .screen{border:1px solid #d8dde6;border-radius:14px;overflow:hidden;margin:18px 0;background:#fff;
+    box-shadow:0 6px 22px rgba(20,28,40,.07)}
+  .screen .bar{background:var(--head);color:#fff;padding:10px 15px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+  .screen .bar .dots{display:flex;gap:6px}
+  .screen .bar .dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.5);display:inline-block}
+  .screen .body{padding:18px 20px}
+  .kpi{display:flex;flex-wrap:wrap;gap:11px;margin:6px 0 14px}
+  .kpi .box{flex:1;min-width:124px;background:#f6f7fa;border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+  .kpi .box .l{font-size:12px;color:var(--muted)}
+  .kpi .box .v{font-size:19px;font-weight:700;color:var(--head)}
+  .kpi .box .v.pos{color:var(--teal)} .kpi .box .v.neg{color:var(--red)}
+  .mini{font-size:12.5px;color:var(--muted)}
+  .tag{font-size:11.5px;padding:2px 8px;border-radius:6px;background:var(--primary-soft);color:var(--primary);border:1px solid #d4ddf3}
+  .tag.virt{background:#f3f1fb;color:#5b4bb0;border-color:#dcd6f3}
+  .btn{display:inline-block;background:var(--primary);color:#fff;border-radius:9px;padding:8px 16px;font-size:13px;margin-top:4px}
+  .btn.ghost{background:#fff;color:var(--primary);border:1px solid var(--primary)}
+  .note-under{background:#f5f6fb;border:1px solid #dfe3ef;border-radius:11px;padding:11px 15px;margin-top:11px;font-size:13px;color:#46506b;line-height:1.7}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){
+    body{font-size:16px}
+    .wrap{padding:0 16px}
+    .card{padding:20px 18px}
+    .grid2{grid-template-columns:1fr}
+    .term{grid-template-columns:128px 1fr}
+  }
+  footer{color:var(--muted);font-size:13px;text-align:center;padding:32px 20px 54px;line-height:1.7}
+  .legend{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .legend span{display:inline-block;margin-right:16px}
+  .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <span class="accent-bar"></span>
+    <h1>Tradingcup <span class="accent">PAMM</span> Phase1 instruction</h1>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+        <a href="#intro">1・角色介紹</a>
+    <a href="#core">2・核心設計</a>
+    <a href="#terms">3・名詞與公式</a>
+    <a href="#flows">4・核心流程</a>
+    <a href="#walk">5・數值範例</a>
+    <a href="#phase1">6・Phase 1 規格</a>
+    <a href="#enhance">7・後續規劃</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ============ 1 角色介紹 ============ -->
+<section id="intro">
+  <div class="card">
+    <h2><span class="num">1</span>角色介紹</h2>
+    <div class="term">
+      <div>Master Signal</div><div>提供者／Master Signal。真正下單交易的人，所有真實倉位與保證金都在他名下的 master account（主帳戶）。</div>
+      <div>Investor</div><div>投資人。把錢放進 pool 跟著賺賠，但<b>在 broker 端沒有自己的獨立倉位</b>，他擁有的是「pool 的一部分」。</div>
+      <div>Pool</div><div>所有人的錢集中在一個 master account，當作一筆資金一起交易。</div>
+      <div>Tradingcup平台</div><div>負責記帳、估值、結算與出入金，並把 pool 的倉位<b>按持份比例</b>顯示給每個投資人看。<b>平台只記帳與計算，不自己下單交易</b>。</div>
+    </div>
+    <div class="callout key"><b>一句話：</b>真錢與真倉位只有一份（在 master account）；投資人手上的是「units」，畫面上的「倉位」是按 units 比例算給他看的示意值。</div>
+  </div>
+</section>
+
+<!-- ============ 1 核心心法 ============ -->
+<section id="core">
+  <div class="card">
+    <h2><span class="num">2</span>核心設計</h2>
+
+    <h3>為什麼要用 unit？</h3>
+    <p>難題：很多投資人在<b>不同時間</b>進出、每個人佔的比例都不同（可能很小），pool 的價值又隨未平倉部位<b>每秒在變</b>。要怎麼公平記錄「誰擁有多少、誰該分到哪段漲跌」？</p>
+
+    <h4>先試最直覺的：給每個人真的 lots（倉位）</h4>
+    <p>舉例：pool 持有 US100 共 <b>0.8 lots</b>。投資人 D 佔 <b>0.5%</b>，他「該有」的就是 0.8 × 0.5% = <b>0.004 lots</b>，已經<b>小於 broker 的最低下單量 0.01 lots</b>，沒辦法真的開成一筆單。</p>
+    <p>→ 也就是說：就算幫每個人換算出 lots，那也<b>不是真實倉位，比較像「示意用的虛擬倉位」</b>（broker 端其實只有 Master Signal 名下那一整筆）；而且要分潤時，得<b>把每個 order 的盈虧逐筆按比例攤給每個人</b>，order 一多就會變得繁瑣、也比較容易算錯。</p>
+
+    <h4>所以改用 unit（跟共同基金一樣）</h4>
+    <p><b>unit 的核心</b>：把「持有多少」和「賺賠多少」拆開——你持有的 <b>units 是固定數字</b>（買進後不變），整個 pool 的盈虧則全部濃縮進<b>一個會漲跌的 unit price</b>。</p>
+    <p>舉例：pool 現值 <b>$200,000</b>、發行 <b>160,000 units</b> → unit price = 200,000 / 160,000 = <b>$1.25</b>。D 放 <b>$1,000</b> → 拿到 1,000 / 1.25 = <b>800 units</b>（佔 0.5%）。D 不需要任何真實倉位，他擁有的就是「pool 的 800 units」。</p>
+
+    <h4>為什麼 unit 做得到、lots 做不到</h4>
+    <ul>
+      <li><b>可無限細分</b>：再小的持份都能用 units 精確表示，不像 lots 卡在最小 0.01。<br><span class="mini">例：D 的 0.5% 用 800 units 就精準了；換成 lots 是 0.004 手，broker 連單都收不了。</span></li>
+      <li><b>損益機制</b>：你只賺賠「進場後」的 unit price 變化，不會分到進場前的盈虧。<br><span class="mini">例：B 在 unit price $1.20 進場，$1.00→$1.20 那段（A 賺的）B 不分；只賺進場後的 $1.20→$1.44。</span></li>
+      <li><b>進出不影響別人</b>：以 unit price 結算是會計恆等式，別人的 unit price 不因你進出而改變。<br><span class="mini">例：D 贖回 800 units（$1,000）後，unit price = (200,000−1,000)/(160,000−800) = $1.25 不變，A/B/C 一毛沒少。</span></li>
+      <li><b>一個數字看績效</b>：unit price 就代表這檔的淨值表現。<br><span class="mini">例：unit price 從 $1.00 漲到 $1.44，一眼就知道 +44%，不用逐筆看 order。</span></li>
+      <li><b>成熟做法</b>：這正是基金的運作方式，可直接沿用。<br><span class="mini">例：就像基金淨值從 10 元變 12 元 = +20%，同一套邏輯。</span></li>
+    </ul>
+
+    <h3>用基金來類比最好懂</h3>
+    <p>把這個 pool 想成一支<b>共同基金</b>：</p>
+    <ul>
+      <li>基金持有一籃子資產（這裡是一籃子外匯／CFD 倉位）。</li>
+      <li>你不會「擁有基金買的某一張台積電」，你擁有的是<b>基金的單位數（units）</b>。</li>
+      <li>你賺賠多少，看「每 unit price」漲跌，不看某一張股票。</li>
+    </ul>
+
+    <h4>把切份視覺化</h4>
+    <p>沿用上面的數字（pool $200,000、160,000 units、unit price $1.25）——同一個 pool 切成 units，大家按持份比例擁有；D 的 0.5% 小到幾乎看不見：</p>
+    <div class="flow">
+      <svg viewBox="0 0 960 290" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="ad" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+        <g font-family="'Noto Sans TC','PingFang TC',sans-serif">
+          <rect x="60" y="14" width="840" height="92" rx="12" fill="#eef4ff" stroke="#2563eb"/>
+          <text x="480" y="40" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">Pool（一籃子真實倉位）</text>
+          <text x="480" y="60" text-anchor="middle" font-size="13.5" fill="#1e3a8a">Equity $200,000 · 共 160,000 units · 每 unit $1.25</text>
+          <g font-size="12.5" fill="#1e3a8a" text-anchor="middle">
+            <rect x="216" y="74" width="120" height="22" rx="6" fill="#ffffff" stroke="#9bb8f3"/><text x="276" y="89">EUR/USD</text>
+            <rect x="352" y="74" width="120" height="22" rx="6" fill="#ffffff" stroke="#9bb8f3"/><text x="412" y="89">XAU/USD</text>
+            <rect x="488" y="74" width="120" height="22" rx="6" fill="#ffffff" stroke="#9bb8f3"/><text x="548" y="89">GBP/JPY</text>
+            <rect x="624" y="74" width="120" height="22" rx="6" fill="#ffffff" stroke="#9bb8f3"/><text x="684" y="89">US100</text>
+          </g>
+          <line x1="480" y1="106" x2="480" y2="150" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ad)"/>
+          <text x="500" y="134" font-size="13" fill="#5b6776">÷ 切成 160,000 units，按持份比例擁有</text>
+          <rect x="60" y="170" width="336" height="50" fill="#2563eb"/>
+          <rect x="396" y="170" width="252" height="50" fill="#0d9488"/>
+          <rect x="648" y="170" width="168" height="50" fill="#6366f1"/>
+          <rect x="816" y="170" width="80" height="50" fill="#94a3b8"/>
+          <rect x="896" y="170" width="4" height="50" fill="#dc2626"/>
+          <g font-size="14" fill="#ffffff" font-weight="700" text-anchor="middle">
+            <text x="228" y="200">A 40%</text>
+            <text x="522" y="200">B 30%</text>
+            <text x="732" y="200">C 20%</text>
+            <text x="856" y="200" font-size="12">9.5%</text>
+          </g>
+          <g font-size="12.5" fill="#5b6776" text-anchor="middle">
+            <text x="228" y="238">64,000 units · $80,000</text>
+            <text x="522" y="238">48,000 units · $60,000</text>
+            <text x="732" y="238">32,000 units · $40,000</text>
+            <text x="856" y="238">其他 15,200 units</text>
+          </g>
+          <line x1="898" y1="170" x2="898" y2="148" stroke="#dc2626" stroke-width="1.4"/>
+          <circle cx="898" cy="148" r="2.5" fill="#dc2626"/>
+          <text x="892" y="142" text-anchor="end" font-size="12.5" fill="#b91c1c" font-weight="700">D 0.5% ≈ 800 units／$1,000</text>
+          <text x="480" y="272" text-anchor="middle" font-size="13" fill="#5b6776">同一個 pool、同一籃倉位，只是切成 units 按比例擁有；D 的 0.5% 小到幾乎看不見。</text>
+        </g>
+      </svg>
+    </div>
+
+    <p>我們的產品一模一樣，但要記住<b>兩層分開</b>：<b>畫面層</b>用「symbol + lots」呈現（讓投資人有在交易的感覺）；<b>核心層</b>用「fund unit + unit price」記帳（決定誰賺賠多少）。畫面上「你持有 EUR/USD 0.05 lots」只是把 pool 倉位 × 你的持份「算給你看」，<b>不是你在 broker 真的有一筆 0.05 lots 的單</b>。</p>
+
+    <div class="grid2">
+      <div class="card" style="margin:0;background:#fbfdff">
+        <h4>畫面層：用 symbol + lots 顯示（像在交易）</h4>
+        <ul class="mini">
+          <li>我持有 EUR/USD 0.05 lots、XAU/USD 0.02 lots…</li>
+          <li>這些 lots 現在 profit +$20</li>
+          <li>看起來像自己在下單交易</li>
+        </ul>
+        <span class="tag virt">虛擬・示意・只能看</span>
+      </div>
+      <div class="card" style="margin:0;background:#fbfdff">
+        <h4>核心層：用 fund unit 記帳（像基金）</h4>
+        <ul class="mini">
+          <li>我持有這個 pool 的 800 units（佔 0.5%）</li>
+          <li>value = 800 × unit price $1.25 = $1,000</li>
+          <li>賺賠跟著整個 pool 的 unit price 走</li>
+        </ul>
+        <span class="tag">真實・以 unit 與 unit price 記帳</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 名詞與公式 ============ -->
+<section id="terms">
+  <div class="card">
+    <h2><span class="num">3</span>名詞與公式</h2>
+
+    <div class="term">
+      <div>Equity (NAV)</div><div>整個 pool 現在值多少 = Balance + Floating P&amp;L。就是 broker 帳戶的 Equity。</div>
+      <div>Balance</div><div>已平倉、已實現的現金結餘（不含還沒平倉的浮動盈虧）。</div>
+      <div>Floating P&amp;L</div><div>未平倉部位的帳面盈虧，隨報價即時變動。</div>
+      <div>Units</div><div>投資人持有的持份單位。入金買 units、出金賣 units。</div>
+      <div>Unit Price</div><div>每一份值多少 = Equity / Total Units。</div>
+      <div>HWM (High-Water Mark)</div><div>帳上曾到過的最高 unit price。<b>只有賺超過這條線才分潤</b>，跌下去再漲回來不重複分潤。</div>
+      <div>Margin / Free Margin</div><div>Margin＝倉位佔用的保證金；Free Margin＝Equity − Margin，是能開新倉或出金的緩衝。</div>
+      <div>rollover</div><div>broker 每天的結算時點（約伺服器時間 00:00）。<b>只認這一刻的 Equity</b> 為當日官方淨值。</div>
+      <div>Forward Pricing</div><div>出入金用「下一個 rollover」的價成交，不是按按鈕當下的價——防止挑價套利。</div>
+      <div>MS 平 order</div><div>出金時按持份比例平掉「他那份」倉位變現，不動到別人的 margin。</div>
+      <div>Negative Balance Protection</div><div>行情跳空跳過頭時，投資人最慘賠光本金、不會倒欠（unit price 下限為 0）。</div>
+      <div>Min Lot</div><div>broker 能接單的最小倉位（外匯常見 0.01，步進 0.01）。比這小的倉位無法在 broker 真實存在。</div>
+    </div>
+
+    <h3>核心公式（含舉例推演）</h3>
+    <p class="lead">分三步看：① 估值算出 unit price → ② D 入金換 units →（之後 pool 上漲）→ ③ D 出金並結算 performance fee。<br><span class="mini">框內配色：<b style="color:#3a5bb0">藍＝步驟標題</b>、<b style="color:#2f897c">綠＝代入的數字例子</b>，白＝公式。</span></p>
+    <div class="formula"><span class="fh">【① 估值】</span>
+Equity (NAV)     = Balance + Floating P&amp;L          <span class="fx">← broker 帳戶的 Equity</span>
+Unit Price       = Equity / Total Units           <span class="fx">例 200,000 / 160,000 = $1.25</span>
+
+<span class="fh">【② 入金（與漲跌無關，只是用「當下 unit price」換 units）】</span>
+入金 Units        = Deposit / Unit Price           <span class="fx">例 $1,000 / 1.25 = 800 units</span>
+
+<span class="fh">【③ 之後 pool 上漲，unit price 1.25 → 1.35，D 出金並結算】</span>
+出金 Cash(gross)  = Redeem Units × Unit Price        <span class="fx">例 800 × 1.35 = $1,080</span>
+Performance Fee   = max(0, Unit Price − HWM) × Redeem Units × Fee Rate
+                    <span class="fx">例 (1.35 − 1.25[D 的 HWM]) × 800 × 20% = $16</span>
+出金 Cash(net)    = Cash(gross) − Performance Fee    <span class="fx">例 1,080 − 16 = $1,064</span>
+
+<span class="fh">【虛擬倉位（UI 投影，與帳務無關）】</span>
+虛擬手數           = Pool Lots(symbol) × Investor Share   <span class="fx">例 0.8 × 0.5% = 0.004 lots</span>
+虛擬盈虧           = Pool Floating P&amp;L(symbol) × Investor Share</div>
+    <div class="callout warn"><b>注意：</b>NAV 一定要用含 Floating P&amp;L 的 <b>Equity</b>，不能只用 <b>Balance</b>。否則新進場的人會不公平地分到（或被稀釋掉）還沒平倉的盈虧。</div>
+  </div>
+</section>
+
+<!-- ============ 3 主要流程 ============ -->
+<section id="flows">
+  <div class="card">
+    <h2><span class="num">4</span>核心流程</h2>
+    <p class="lead">五條流程串起整個 Phase 1：入金 → 每日估值 → 分潤 → 出金 → 風控/對賬。</p>
+
+    <h3>完整生命週期（先看全貌）</h3>
+    <p>下圖把投資人的一筆資金，從進場到退場走一遍。先看這六步在做什麼，再對照下方流程圖：</p>
+    <ul>
+      <li><b>① 入金 Deposit</b>：投資人把錢放進 Master Signal 的 pool（單一主帳戶），錢進到 pool 裡一起被操作。</li>
+      <li><b>② 買 Units</b>：用當下的 unit price 把這筆錢換成等值的 units，記在內部 ledger 上，作為投資人對 pool 的持份憑證。</li>
+      <li><b>③ 交易 + rollover 估值</b>：Master Signal 操盤，每天 rollover（換日點）以 broker equity 重算 unit price；賺賠都反映在 unit price 上漲或下跌，units 數量不變。</li>
+      <li><b>④ 分潤 Perf. Fee</b>：rollover 結算時，只有 unit price 超過該投資人的 HWM（前高）才收 performance fee，虧損不收、回本期間不重複收。</li>
+      <li><b>⑤ 出金 Redeem</b>：投資人申請賣出 units；Master Signal 在 rollover 前平掉足量 order，把 pool 釋放出對應現金。</li>
+      <li><b>⑥ 付現金</b>：以 rollover 的官方 unit price 結算，付款給投資人並註銷對應 units，這筆資金正式退場。</li>
+    </ul>
+    <div class="flow">
+      <svg viewBox="0 0 1100 90" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="ao" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+        <g font-family="'Noto Sans TC','PingFang TC',sans-serif" font-size="13.5" text-anchor="middle">
+          <rect x="4" y="18" width="166" height="58" rx="10" fill="#eef4ff" stroke="#2563eb"/><text x="87" y="42" fill="#1e3a8a" font-weight="700">① 入金 Deposit</text><text x="87" y="60" fill="#1e3a8a">投資人放錢進 pool</text>
+          <line x1="170" y1="47" x2="184" y2="47" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ao)"/>
+          <rect x="186" y="18" width="166" height="58" rx="10" fill="#eef4ff" stroke="#2563eb"/><text x="269" y="42" fill="#1e3a8a" font-weight="700">② 買 Units</text><text x="269" y="60" fill="#1e3a8a">@ unit price</text>
+          <line x1="352" y1="47" x2="366" y2="47" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ao)"/>
+          <rect x="368" y="18" width="166" height="58" rx="10" fill="#eef4ff" stroke="#2563eb"/><text x="451" y="42" fill="#1e3a8a" font-weight="700">③ 交易 + rollover 估值</text><text x="451" y="60" fill="#1e3a8a">unit price 變動</text>
+          <line x1="534" y1="47" x2="548" y2="47" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ao)"/>
+          <rect x="550" y="18" width="166" height="58" rx="10" fill="#eef4ff" stroke="#2563eb"/><text x="633" y="42" fill="#1e3a8a" font-weight="700">④ 分潤 Perf. Fee</text><text x="633" y="60" fill="#1e3a8a">超過 HWM 才分潤</text>
+          <line x1="716" y1="47" x2="730" y2="47" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ao)"/>
+          <rect x="732" y="18" width="166" height="58" rx="10" fill="#eef4ff" stroke="#2563eb"/><text x="815" y="42" fill="#1e3a8a" font-weight="700">⑤ 出金 Redeem</text><text x="815" y="60" fill="#1e3a8a">賣 units + MS 平 order</text>
+          <line x1="898" y1="47" x2="912" y2="47" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ao)"/>
+          <rect x="914" y="18" width="166" height="58" rx="10" fill="#ecfdf5" stroke="#0d9488"/><text x="997" y="42" fill="#065f46" font-weight="700">⑥ 付現金</text><text x="997" y="60" fill="#065f46">註銷 units</text>
+        </g>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="background:#eef4ff;border:1px solid #2563eb"></span>動作步驟</span>
+      <span><span class="sw" style="background:#fff7ed;border:1px solid #ea580c"></span>判斷</span>
+      <span><span class="sw" style="background:#ecfdf5;border:1px solid #0d9488"></span>結果</span>
+    </div>
+
+    <!-- Flow 1 入金 -->
+    <h3>① 入金（買 units）</h3>
+    <div class="flow">
+      <svg viewBox="0 0 1080 100" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+        <g font-size="13.5" font-family="'Noto Sans TC','PingFang TC',sans-serif">
+          <rect x="8" y="26" width="180" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="98" y="46" text-anchor="middle" fill="#1e3a8a">投資人申請入金</text><text x="98" y="63" text-anchor="middle" fill="#1e3a8a">$1,000</text>
+          <line x1="188" y1="50" x2="226" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a1)"/>
+          <rect x="228" y="26" width="180" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="318" y="46" text-anchor="middle" fill="#1e3a8a">等下一個換日點</text><text x="318" y="63" text-anchor="middle" fill="#1e3a8a">（遠期定價）</text>
+          <line x1="408" y1="50" x2="446" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a1)"/>
+          <rect x="448" y="26" width="190" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="543" y="46" text-anchor="middle" fill="#1e3a8a">用官方 unit price</text><text x="543" y="63" text-anchor="middle" fill="#1e3a8a">換算 800 units</text>
+          <line x1="638" y1="50" x2="676" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a1)"/>
+          <rect x="678" y="26" width="170" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="763" y="50" text-anchor="middle" fill="#1e3a8a">記入 ledger</text>
+          <line x1="848" y1="50" x2="886" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a1)"/>
+          <rect x="888" y="26" width="184" height="48" rx="9" fill="#ecfdf5" stroke="#0d9488"/><text x="980" y="46" text-anchor="middle" fill="#065f46">顯示 units</text><text x="980" y="63" text-anchor="middle" fill="#065f46">+ 虛擬倉位</text>
+        </g>
+      </svg>
+    </div>
+    <ul>
+      <li><b>Forward pricing（遠期定價）</b>：D 今天 14:00 按下入金 $1,000，但成交價要等今晚 rollover。若 rollover 時 unit price 從 $1.25 變 $1.24 → D 拿到 1,000 ÷ 1.24 ≈ <b>806.5 units</b>（用 rollover 的價，不是 14:00 的價），防挑價。</li>
+      <li><b>換算 units</b>：units = deposit ÷ unit price。例：$1,000 ÷ $1.25 = <b>800 units</b>。</li>
+      <li><b>公平點</b>：D 用「當下 unit price」買，等於只買進場後的 pool，<b>不會分到他進場前 pool 賺/賠的部分</b>。</li>
+    </ul>
+
+    <!-- Flow 2 估值 -->
+    <h3>② 每日估值（00:00:00）</h3>
+    <div class="flow">
+      <svg viewBox="0 0 1080 170" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+        <g font-size="13.5" font-family="'Noto Sans TC','PingFang TC',sans-serif">
+          <rect x="8" y="20" width="158" height="46" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="87" y="48" text-anchor="middle" fill="#1e3a8a">換日點到</text>
+          <line x1="166" y1="43" x2="200" y2="43" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a2)"/>
+          <rect x="202" y="20" width="178" height="46" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="291" y="40" text-anchor="middle" fill="#1e3a8a">讀 broker</text><text x="291" y="57" text-anchor="middle" fill="#1e3a8a">主帳戶 Equity</text>
+          <line x1="380" y1="43" x2="414" y2="43" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a2)"/>
+          <rect x="416" y="20" width="178" height="46" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="505" y="40" text-anchor="middle" fill="#1e3a8a">算 unit price</text><text x="505" y="57" text-anchor="middle" fill="#1e3a8a">NAV ÷ 總 units</text>
+          <line x1="594" y1="43" x2="628" y2="43" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a2)"/>
+          <polygon points="730,18 824,43 730,68 636,43" fill="#fff7ed" stroke="#ea580c"/><text x="730" y="40" text-anchor="middle" fill="#9a3412">對賬：系統總值</text><text x="730" y="56" text-anchor="middle" fill="#9a3412">＝ broker 淨值？</text>
+          <line x1="824" y1="43" x2="900" y2="43" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a2)"/><text x="862" y="35" text-anchor="middle" fill="#0d9488" font-size="12">對得上</text>
+          <rect x="902" y="20" width="170" height="46" rx="9" fill="#ecfdf5" stroke="#0d9488"/><text x="987" y="48" text-anchor="middle" fill="#065f46">更新當日官方淨值</text>
+          <line x1="730" y1="68" x2="730" y2="112" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a2)"/><text x="775" y="92" text-anchor="middle" fill="#dc2626" font-size="12">對不上</text>
+          <rect x="600" y="114" width="260" height="44" rx="9" fill="#fef2f2" stroke="#dc2626"/><text x="730" y="142" text-anchor="middle" fill="#991b1b">暫停出入金 + 告警 + 人工查清</text>
+        </g>
+      </svg>
+    </div>
+    <ul>
+      <li><b>淨值來源</b>：Phase 1 直接以 broker 主帳戶 equity 為準。例：rollover 時 equity = $200,000、total units = 160,000 → unit price = 200,000 ÷ 160,000 = <b>$1.25</b>。</li>
+      <li><b>對賬（白話）</b>：拿「系統 ledger 算的總值」對「broker equity」。例：系統算 $200,000、broker 顯示 $199,940（差 $60，多半是 swap/commission），差 0.03% 在容差內。</li>
+    </ul>
+
+    <!-- Flow 3 分潤 -->
+    <h3>③ performance fee結算（HWM）</h3>
+    <div class="flow">
+      <svg viewBox="0 0 1080 170" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+        <g font-size="13.5" font-family="'Noto Sans TC','PingFang TC',sans-serif">
+          <rect x="8" y="20" width="186" height="46" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="101" y="40" text-anchor="middle" fill="#1e3a8a">觸發結算</text><text x="101" y="57" text-anchor="middle" fill="#1e3a8a">出金時／週期底</text>
+          <line x1="194" y1="43" x2="230" y2="43" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a3)"/>
+          <polygon points="350,16 470,43 350,70 230,43" fill="#fff7ed" stroke="#ea580c"/><text x="350" y="40" text-anchor="middle" fill="#9a3412">unit price</text><text x="350" y="56" text-anchor="middle" fill="#9a3412">＞ HWM？</text>
+          <line x1="470" y1="43" x2="540" y2="43" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a3)"/><text x="505" y="35" text-anchor="middle" fill="#0d9488" font-size="12">是</text>
+          <rect x="542" y="20" width="210" height="46" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="647" y="40" text-anchor="middle" fill="#1e3a8a">分潤 = 差額 × units × 費率</text><text x="647" y="57" text-anchor="middle" fill="#1e3a8a">撥入 MS Wallet account</text>
+          <line x1="752" y1="43" x2="788" y2="43" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a3)"/>
+          <rect x="790" y="20" width="282" height="46" rx="9" fill="#ecfdf5" stroke="#0d9488"/><text x="931" y="48" text-anchor="middle" fill="#065f46">更新 HWM ＝ 當前 unit price</text>
+          <line x1="350" y1="70" x2="350" y2="116" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a3)"/><text x="392" y="96" text-anchor="middle" fill="#dc2626" font-size="12">否</text>
+          <rect x="232" y="118" width="236" height="42" rx="9" fill="#ecfdf5" stroke="#0d9488"/><text x="350" y="145" text-anchor="middle" fill="#065f46">不分潤（虧損或未過HWM）</text>
+        </g>
+      </svg>
+    </div>
+    <ul>
+      <li><b>只對超過 HWM 的部分分潤</b>：A 有 10,000 units、HWM = $1.00，unit price 漲到 $1.44 → performance fee = (1.44 − 1.00) × 10,000 × 20% = <b>$880</b>。</li>
+      <li><b>虧損不分潤</b>：若 unit price = $0.90 < HWM $1.00 → fee = <b>$0</b>，Master Signal 只在創新高時才有收入。</li>
+      <li><b>HWM 不重複分潤</b>：A 若上次在 $1.44 結算過（HWM 更新為 $1.44），之後跌到 $1.10 再漲回 $1.30 → <b>不分潤</b>（還沒過 $1.44）；漲破 $1.44 才再分潤。</li>
+      <li><b>以 unit 轉移結算</b>：把 A 一小部分 units 轉給 Master Signal，當下 unit price 不變，不衝擊其他人。</li>
+    </ul>
+
+    <!-- Flow 4 出金 -->
+    <h3>④ 出金（賣 units + 平倉釋放現金）</h3>
+    <div class="flow">
+      <svg viewBox="0 0 1080 100" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a4" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+        <g font-size="13.5" font-family="'Noto Sans TC','PingFang TC',sans-serif">
+          <rect x="8" y="26" width="172" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="94" y="54" text-anchor="middle" fill="#1e3a8a">投資人申請出金</text>
+          <line x1="180" y1="50" x2="216" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a4)"/>
+          <rect x="218" y="26" width="184" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="310" y="46" text-anchor="middle" fill="#1e3a8a">等換日點定價</text><text x="310" y="63" text-anchor="middle" fill="#1e3a8a">（遠期定價）</text>
+          <line x1="402" y1="50" x2="438" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a4)"/>
+          <rect x="440" y="26" width="198" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="539" y="46" text-anchor="middle" fill="#1e3a8a">Master Signal 平倉</text><text x="539" y="63" text-anchor="middle" fill="#1e3a8a">釋放現金（rollover 前）</text>
+          <line x1="638" y1="50" x2="674" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a4)"/>
+          <rect x="676" y="26" width="168" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="760" y="50" text-anchor="middle" fill="#1e3a8a">結算performance fee</text>
+          <line x1="844" y1="50" x2="880" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a4)"/>
+          <rect x="882" y="26" width="190" height="48" rx="9" fill="#ecfdf5" stroke="#0d9488"/><text x="977" y="46" text-anchor="middle" fill="#065f46">付現金</text><text x="977" y="63" text-anchor="middle" fill="#065f46">+ 註銷 units</text>
+        </g>
+      </svg>
+    </div>
+    <ul>
+      <li><b>真正保護其他人的是「以 unit price 結算」</b>：D 領 800 units × $1.25 = <b>$1,000</b>；出金後 unit price = (200,000 − 1,000) / (160,000 − 800) = <b>$1.25（不變）</b>。<b>不管 Master Signal 平掉哪一筆 order</b>，剩下的人 unit price 都不被稀釋。</li>
+      <li><b>為何不影響 margin</b>：付 D 的 $1,000 會讓 equity 少 $1,000；而為了生出這 $1,000，Master Signal 平掉某些 order，<b>同時釋放那些 order 佔用的 margin</b>。equity 與 used margin 一起下降，所以 D 出金<b>不會把其他人的 margin 額度抽乾</b>——D 帶走的只是「自己那份 equity」。</li>
+      <li><b>系統不需要按虛擬倉位逐筆平倉</b>：它只要算出「需釋放多少現金 = D units × unit price」，<b>平哪些 order 由 Master Signal 自行決定</b>（可能只是平掉某一筆，不必對應 D 的虛擬 lots）。</li>
+      <li><b>虧損中也能出</b>：若 unit price 跌到 $1.10 → D 領 800 × 1.10 = <b>$880</b>（自負 $120），其他人 unit price 仍 $1.10、且無 performance fee。</li>
+    </ul>
+    <div class="callout warn"><b>出金風險與限制（Phase 1）：</b><br>① <b>平倉後仍可能爆倉</b>：Master Signal 平掉部分 order 釋放現金後，剩餘倉位若在 rollover 前大跌，pool 仍可能觸發強平；D 在現金實際付出前仍是持有人，須一起承擔。<br>② <b>無自動平倉機制</b>：Phase 1 完全依賴 Master Signal 配合。<b>規範上必須明訂</b>：investor 提出出金後，Master Signal 須在收到通知後、於該 <b>rollover 前</b>完成平倉釋放現金；未配合則出金順延，並應訂違約/罰則條款。</div>
+
+    <!-- Flow 5 風控 -->
+    <h3>⑤ 風控與強平（broker 原生）</h3>
+    <div class="flow">
+      <svg viewBox="0 0 1080 100" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a5" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+        <g font-size="13.5" font-family="'Noto Sans TC','PingFang TC',sans-serif">
+          <rect x="8" y="26" width="190" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="103" y="46" text-anchor="middle" fill="#1e3a8a">broker 監控保證金</text><text x="103" y="63" text-anchor="middle" fill="#1e3a8a">（追繳 100%／強平 50%）</text>
+          <line x1="198" y1="50" x2="234" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a5)"/>
+          <rect x="236" y="26" width="186" height="48" rx="9" fill="#fff7ed" stroke="#ea580c"/><text x="329" y="46" text-anchor="middle" fill="#9a3412">低於門檻</text><text x="329" y="63" text-anchor="middle" fill="#9a3412">broker 自動強平</text>
+          <line x1="422" y1="50" x2="458" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a5)"/>
+          <rect x="460" y="26" width="200" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="560" y="46" text-anchor="middle" fill="#1e3a8a">系統同步結果</text><text x="560" y="63" text-anchor="middle" fill="#1e3a8a">按 units 分攤虧損</text>
+          <line x1="660" y1="50" x2="696" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a5)"/>
+          <rect x="698" y="26" width="178" height="48" rx="9" fill="#eef4ff" stroke="#2563eb"/><text x="787" y="50" text-anchor="middle" fill="#1e3a8a">unit price 下跌</text>
+          <line x1="876" y1="50" x2="912" y2="50" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a5)"/>
+          <rect x="914" y="26" width="158" height="48" rx="9" fill="#ecfdf5" stroke="#0d9488"/><text x="993" y="46" text-anchor="middle" fill="#065f46">負餘額保護</text><text x="993" y="63" text-anchor="middle" fill="#065f46">下限為 0</text>
+        </g>
+      </svg>
+    </div>
+    <ul>
+      <li><b>強平不用平台做</b>：margin level = equity ÷ used margin，跌破 50% → broker 自動強平，平台只接收結果。</li>
+      <li><b>大家按 unit 等比例分攤</b>：例：強平讓 pool 虧 $20,000，unit price 從 $1.25 → (200,000 − 20,000) ÷ 160,000 = <b>$1.125</b>，所有人同步 −10%。</li>
+      <li><b>Negative Balance Protection</b>：若跳空使 equity 變負，unit price 封底 $0 → D 最多賠光 $1,000、<b>不會倒欠</b>。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 4 完整 Example ============ -->
+<section id="walk">
+  <div class="card">
+    <h2><span class="num">5</span>數值範例</h2>
+    <p class="lead">用 A、B 兩位不同時間進場的投資人，依序走過：損益機制 → 報酬差異 → 獲利出金 → 虧損出金。</p>
+
+    <table>
+      <tr><th>Case</th><th>時點</th><th>事件</th><th>unit price</th><th>total units / equity</th><th>重點</th></tr>
+      <tr><td>1</td><td>T0</td><td>建 pool，A 入金 $10,000</td><td>$1.00</td><td>10,000 / $10,000</td><td>起始基準，A 得 10,000 units</td></tr>
+      <tr><td>2</td><td>T5</td><td>pool +20% 後 B 入金 $12,000</td><td>$1.20</td><td>20,000 / $24,000</td><td>B 得 10,000 units，<b>不分</b> T0–T5 的 +$2,000</td></tr>
+      <tr><td>3</td><td>T20</td><td>pool 續漲</td><td>$1.44</td><td>20,000 / $28,800</td><td>A +44%、B +20% → 反映進場時間</td></tr>
+      <tr><td>4</td><td>T20</td><td>A 全額出金（fee 20%）</td><td>$1.44</td><td>10,000 / $14,400</td><td>A 實拿 $13,520，B 不受影響</td></tr>
+      <tr><td>5</td><td>T30</td><td>pool 下跌</td><td>$1.10</td><td>10,000 / $11,000</td><td>B 帳上 −$1,000，未過 HWM</td></tr>
+      <tr><td>6</td><td>T30</td><td>B 全額出金</td><td>$1.10</td><td>0 / $0</td><td>B 領 $11,000、fee $0、自負虧損</td></tr>
+    </table>
+
+    <h4>Case 2：損益機制（晚進場不吃虧）</h4>
+    <div class="formula">T5 unit price = equity / total units = 12,000 / 10,000 = $1.20
+B 入金 $12,000 → units = 12,000 / 1.20 = 10,000
+入金後 unit price = 24,000 / 20,000 = $1.20（不變）→ 入金不會稀釋 A</div>
+
+    <h4>Case 3：同一段漲幅，報酬卻不同</h4>
+    <div class="formula">A：10,000 × 1.44 = $14,400 → (1.44 / 1.00 − 1) = +44%
+B：10,000 × 1.44 = $14,400 → (1.44 / 1.20 − 1) = +20%   ← B 從 $1.20 起算</div>
+
+    <h4>Case 4：A 出金的 performance fee 與「不影響 B」</h4>
+    <div class="formula">A gross = 10,000 × 1.44 = $14,400
+performance fee = (1.44 − 1.00 [A 的 HWM]) × 10,000 × 20% = $880
+A 實拿 = 14,400 − 880 = $13,520（$880 給 Master Signal）
+出金後 unit price = (28,800 − 14,400) / (20,000 − 10,000) = $1.44（不變）→ B 仍值 $14,400</div>
+
+    <h4>Case 6：虧損中出金，自負虧損、無 fee</h4>
+    <div class="formula">B gross = 10,000 × 1.10 = $11,000
+B 的 HWM = $1.20，現在 unit price $1.10 < HWM → performance fee = $0
+B 實拿 = $11,000，對應投入 $12,000 → 自負 −$1,000；其他持有人 unit price 不變</div>
+
+    <div class="callout key"><b>整條線的精髓：</b>每個人只承擔「進場後」的 unit price 變化——賺，超過 HWM 才付 fee；賠，自己承擔且不收 fee；任何人進出都用 unit price 結算，所以<b>不會動到其他人</b>。損益機制與分潤公平，靠 unit 就同時成立。</div>
+  </div>
+</section>
+
+<!-- ============ 5 Phase1 功能統整 ============ -->
+<section id="phase1">
+  <div class="card">
+    <h2><span class="num">6</span>Phase 1 規格</h2>
+    <p class="lead">Phase 1 的完整定義：規則、已知風險，以及要開發的功能清單。</p>
+
+    <h4>A. 帳戶與簽約</h4>
+    <ul>
+      <li><b>Master Signal 註冊</b>
+        <ul>
+          <li>綁定<b>一個 master account</b>，所有人的錢集中在這個 broker 主帳戶。</li>
+          <li><b>簽一份 LPOA</b>：授權 MS 操盤、約定 performance fee 費率與 HWM，但<b>不能挪用、也不能代為出金</b>。</li>
+          <li>建立 <b>Wallet account</b>（收益帳戶，<b>與 CopyTrading 共用</b>）——分潤撥入此帳戶。</li>
+        </ul>
+      </li>
+      <li><b>Investor 簽約</b>
+        <ul>
+          <li>服務條款 + 風險揭露。</li>
+          <li><b>入金前試算</b>：輸入金額 → 以當前 unit price 預估 units。</li>
+        </ul>
+      </li>
+      <li><b>解除簽約</b>
+        <ul>
+          <li><b>Investor</b>：全額贖回後解除 LPOA 與服務條款。</li>
+          <li><b>Master Signal</b>：pool 清算與投資人退出流程（與待討論連動）。</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h4>B. 每日 rollover 更新估值（00:00:00）</h4>
+    <ul>
+      <li>讀 MT4/MT5 的 <b>equity（= NAV）</b>，<b>÷ pool 總 units = unit price</b>，更新 ledger。</li>
+      <li><b>與 broker equity 對賬</b>：確認平台帳上總額（Σ units × unit price）= broker 帳戶實際金額（確保小數位一致）。</li>
+    </ul>
+
+    <h4>C. 分潤</h4>
+    <ul>
+      <li>performance fee 依 LPOA（例 20%），只對<b>超過 HWM 的部分</b>。</li>
+      <li>HWM 追蹤；每月 + 出金時結算，分潤撥入 <b>MS 的 Wallet account</b>（MS 收益帳戶，可提領）。</li>
+    </ul>
+
+    <h4>D. Investor 後台</h4>
+    <ul>
+      <li><b>總覽</b>：my units、unit price、value、損益。</li>
+      <li><b>虛擬持倉</b>：把 Master Signal 的 order <b>按持份投影成虛擬 lots</b>（只讀）。</li>
+      <li><b>入金</b>
+        <ul>
+          <li>選擇要入金的 live account。</li>
+          <li>依<b>隔天的 unit price</b>（下一個 rollover）換算並發行 units，完成入金。</li>
+        </ul>
+      </li>
+      <li><b>出金</b>
+        <ul>
+          <li>選擇要出金的 live account。</li>
+          <li>通知 <b>Master Signal</b>，於該 rollover 前平倉釋放現金。</li>
+          <li>依<b>隔天的 unit price</b>（下一個 rollover）贖回 units，完成出金。</li>
+        </ul>
+      </li>
+      <li><b>帳務明細</b> + 每月分潤對帳單。</li>
+    </ul>
+
+    <h4>E. Master Signal／營運後台</h4>
+    <ul>
+      <li>pool 總覽、各投資人持份。</li>
+      <li><b>出金待辦</b>：系統算出需釋放現金 → 通知 MS 於 rollover 前平倉。</li>
+    </ul>
+
+    <h4>F. 通知（Email／訂閱）</h4>
+    <ul>
+      <li>簽約 / 解除簽約。</li>
+      <li>出入金申請。</li>
+      <li>每月分潤。</li>
+    </ul>
+
+    <h4>G. FAQ 與文件</h4>
+    <ul>
+      <li>FAQ、服務條款 / LPOA 範本 / 風險揭露書。</li>
+    </ul>
+
+    <h4>H. 多語系</h4>
+    <ul>
+      <li>多語系 (i18n)。</li>
+    </ul>
+
+    <h4 style="color:#8f6207">I. 跨團隊（需協調）</h4>
+    <ul>
+      <li><b>定義 Master Signal account group</b>：broker 端的帳戶群組結構與綁定關係（哪個 master account、如何歸戶）。</li>
+      <li><b>Master Signal 不能出入金</b>：MS 只能交易，資金進出僅限 Investor；MS 帳戶不開放出入金。</li>
+    </ul>
+
+    <h4 style="color:#c0473a">J. 待討論</h4>
+    <ul>
+      <li><b>rollover 規則調整通知</b>：需要事先通知——rollover 是官方估值/結算時點，改它會影響成交時點與 unit price，須提前公告並更新條款。</li>
+      <li><b>假日 rollover 出入金 / 爆倉如何處理</b>：市場休市時無法平倉變現，遇到跳空或保證金不足要怎麼結算、出入金是否順延，待定義。</li>
+    </ul>
+
+    <h3>已知風險</h3>
+    <div class="callout risk"><b>① 靠人工平倉的執行風險</b><br>出金要 Master Signal 自己及時平倉，他不在線、拖延、或故意不平就會卡住。Phase 1 沒有機器強制執行。</div>
+    <div class="callout risk"><b>② 跳空/滑價的失效邊界</b><br>保證金快見底又碰上跳空時，「按比例平倉自償」會失效；負餘額保護只保證不倒欠，剩下的虧損與滑價算誰要先講清楚。</div>
+    <div class="callout risk"><b>③ 投資人體驗</b>：完全沒有即時出金、全部等換日點，習慣「秒到帳」的人會不滿，需期望管理。</div>
+    <div class="callout warn"><b>④ Master Signal 沒有自己的錢在裡面</b><br>他虧的不是自己的錢，容易亂冒險、賭翻本。Phase 1 綁住他的只剩「performance fee」，少了「賠錢他自己也痛」這層保險，道德風險高。</div>
+    <div class="callout warn"><b>⑤ 資金混同的合規風險</b><br>大家的錢全在一個帳戶，很多地方法律上可能算「集合投資／要牌照」。「現在沒人管」不等於合法，上線前一定要找律師看。</div>
+    <div class="callout warn"><b>⑥ 沒有現金緩衝</b><br>每筆出金（連小額）都要平倉才有錢付，交易成本與操作負擔變高；留不留現金全看 Master Signal 自律。</div>
+    <div class="callout warn"><b>⑦ 沒有煞車機制</b><br>砍掉了閘門/暫停/通知期，遇到一窩蜂出金或極端行情沒有緩衝閥。FX 流動性好大致能撐，但極端狀況下沒有安全閥。</div>
+    <div class="callout"><b>⑧ 結算時間差</b>：換日點定了價但現金晚點付，中間行情再變的差額歸屬要寫死。</div>
+    <div class="callout"><b>⑨ 負餘額保護誰買單</b>：真穿倉變負時那個洞由 broker／平台／Master Signal 誰補，要事先講好。</div>
+  </div>
+</section>
+
+<!-- ============ 6 Enhance features ============ -->
+<section id="enhance">
+  <div class="card">
+    <h2><span class="num">7</span>後續規劃</h2>
+    <p class="lead">Phase 1 刻意不做、留到之後再加的功能。</p>
+    <table>
+      <tr><th>功能</th><th>解決什麼</th><th>複雜度</th></tr>
+      <tr><td>即時出金 / 通知期 / 贖回視窗</td><td>更快、更有序的出金體驗</td><td>低</td></tr>
+      <tr><td>贖回閘門 / 極端行情暫停</td><td>防擠兌、極端行情的安全閥</td><td>中</td></tr>
+      <tr><td>平台強制現金緩衝</td><td>小額出金免平倉、即時到帳</td><td>低</td></tr>
+      <tr><td>自動平倉 / 自動減倉引擎（broker API）</td><td>不靠 MS 自律，機器強制執行出金平倉</td><td>高</td></tr>
+      <tr><td>Master Signal 限額（槓桿/集中度/回撤）</td><td>限制 Master Signal 過度冒險</td><td>低～中</td></tr>
+      <tr><td>Master Signal 自有資金入 pool（skin in the game）</td><td>讓 Master Signal「賠錢也痛」，降低道德風險</td><td>低（需金流）</td></tr>
+      <tr><td>management fee（年化按日計提）</td><td>覆蓋固定營運成本</td><td>中</td></tr>
+      <tr><td>投資人自訂停損線</td><td>跌到設定值自動退出</td><td>中</td></tr>
+      <tr><td>擺動定價 / 反稀釋費</td><td>把交易成本歸給進出的人</td><td>高</td></tr>
+      <tr><td>盤中即時估值</td><td>更即時的出入金體驗</td><td>高（套利面變大）</td></tr>
+      <tr><td>多 LPOA / 多策略 pool / 多 Master Signal</td><td>規模化、分散關鍵人風險</td><td>高</td></tr>
+    </table>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  Tradingcup PAMM Phase1 instruction（草案）· 僅供產品討論用途，非法律或投資建議 · 合規與資金結構請於落地前諮詢當地法遵與律師。
+</footer>
+
+</body>
+</html>
