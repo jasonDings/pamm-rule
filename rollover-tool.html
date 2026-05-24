@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>Rollover PAMM 推演工具（持份版）</title>
+<style>
+  :root{
+    --bg:#eef1f6; --card:#ffffff; --ink:#2b3038;
+    --text:#2b3038; --text-soft:#5c6573; --text-faint:#9aa3b2;
+    --border:#e8ebf2; --border-strong:#d7dce6;
+    --primary:#3a5bb0; --primary-strong:#2f4c98; --primary-soft:#eef1fb;
+    --accent:#3a5bb0; --accent-soft:#eef1fb;
+    --teal:#2f897c; --teal-soft:#e7f3f0;
+    --green:#1f8a5b; --green-soft:#e6f4ec;
+    --red:#c0473a; --red-soft:#fbecea;
+    --orange:#b5740f; --orange-soft:#fbf2e0;
+    --yellow-soft:#fdf7e6;
+    --rollover-bg:#eef2fb; --rollover-border:#3a5bb0;
+    --master:#3a5bb0; --inv-a:#2f897c; --inv-b:#c77a1a; --inv-c:#7a5bd0; --inv-d:#c0473a;
+    --radius:9px; --radius-lg:14px;
+    --shadow-sm:0 1px 2px rgba(26,34,54,.04);
+    --shadow-card:0 1px 3px rgba(26,34,54,.05),0 8px 24px rgba(26,34,54,.045);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Noto Sans TC","PingFang TC",-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink);
+    font-size:14px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+
+  .hero{
+    background:
+      radial-gradient(620px 340px at 88% -60%,rgba(47,137,124,.20),transparent 60%),
+      radial-gradient(680px 380px at 0% 130%,rgba(58,91,176,.18),transparent 60%),
+      linear-gradient(135deg,#eaf0fb,#e8f4f0);
+    border-bottom:1px solid #dde4f0;
+  }
+  .hero-inner{max-width:1520px;margin:0 auto;padding:40px 28px 32px}
+  .accent-bar{display:block;width:44px;height:4px;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--teal));margin-bottom:16px}
+  .page-header{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+  .page-title{font-size:30px;font-weight:800;letter-spacing:-.01em;margin:0;color:var(--ink)}
+  .page-title .grad{background:linear-gradient(90deg,var(--primary),var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+  .page-subtitle{color:var(--text-soft);font-size:13.5px;font-weight:500}
+  .page-desc{color:var(--text-soft);font-size:13px;line-height:1.9;margin:8px 0 0;max-width:920px}
+  .page-desc b{color:var(--primary-strong);font-weight:600}
+
+  .container{max-width:1520px;margin:0 auto;padding:26px 28px 80px}
+
+  .topbar{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:20px 22px;margin-bottom:22px;box-shadow:var(--shadow-card);
+    display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+  }
+  .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:14px}
+  .stat{position:relative;padding:14px 16px 14px 19px;border:1px solid var(--border);border-radius:var(--radius);background:#fbfcfe}
+  .stat::before{content:"";position:absolute;left:0;top:13px;bottom:13px;width:3px;border-radius:0 3px 3px 0;background:var(--primary)}
+  .stat:nth-child(2)::before{background:var(--teal)}
+  .stat:nth-child(3)::before{background:var(--orange)}
+  .stat:nth-child(4)::before{background:var(--inv-c)}
+  .stat .label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-weight:600}
+  .stat .value{font-size:23px;font-weight:700;color:var(--ink);margin-top:5px;font-variant-numeric:tabular-nums;font-family:var(--mono);letter-spacing:-.01em}
+  .stat .sublabel{font-size:11px;color:var(--text-faint);margin-top:3px}
+
+  .controls{display:flex;gap:12px;align-items:flex-end}
+  .input-group{display:flex;flex-direction:column;gap:5px}
+  .input-group label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);font-weight:600}
+  .input-with-suffix{display:flex;align-items:center;border:1px solid var(--border-strong);border-radius:8px;padding:0 11px;background:var(--card);transition:border-color .15s,box-shadow .15s}
+  .input-with-suffix:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+  .input-with-suffix input{border:none;outline:none;background:transparent;width:70px;padding:8px 0;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;font-family:var(--mono);color:var(--ink)}
+  .input-with-suffix .suffix,.input-with-suffix .prefix{color:var(--text-faint);font-size:13px}
+  .input-with-suffix .prefix{margin-right:4px}
+
+  .btn{border:1px solid var(--border-strong);background:var(--card);color:var(--text);padding:9px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;font-family:inherit}
+  .btn:hover{background:#fff;border-color:var(--primary);color:var(--primary);box-shadow:0 2px 8px rgba(26,34,54,.07)}
+  .btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn-primary:hover{background:var(--primary-strong);border-color:var(--primary-strong);color:#fff}
+  .btn-ghost{border:1px dashed var(--border-strong);color:var(--text-soft);background:transparent}
+  .btn-ghost:hover{background:var(--card);color:var(--primary);border-color:var(--primary)}
+  .btn-icon{background:transparent;border:none;padding:5px 7px;color:var(--text-faint);cursor:pointer;border-radius:6px;transition:all .15s}
+  .btn-icon:hover{background:var(--red-soft);color:var(--red)}
+
+  .table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card)}
+  .table-scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:1280px}
+  thead th{text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);padding:14px 13px;background:#f5f7fc;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:2}
+  tbody td{padding:15px 13px;border-bottom:1px solid var(--border);vertical-align:top;font-variant-numeric:tabular-nums}
+  tbody tr.event-row{transition:background .12s}
+  tbody tr.event-row:hover{background:#f8fafd}
+  tbody tr.rollover-row{background:var(--rollover-bg);box-shadow:inset 4px 0 0 var(--rollover-border)}
+  tbody tr.rollover-row:hover{background:#e6edfa}
+
+  .col-handle{width:30px;padding-left:16px !important;padding-right:4px !important}
+  .col-num{width:40px;color:var(--text-faint);font-weight:700}
+  .col-event{width:190px}
+  .col-params{min-width:240px}
+  .col-participant{min-width:172px}
+  .col-equity,.col-unsettled{width:112px}
+  .col-formula{width:96px}
+  .col-del{width:42px;padding-right:16px !important}
+
+  .drag-handle{color:var(--text-faint);cursor:grab;user-select:none;font-size:14px;opacity:0;transition:opacity .15s}
+  tr.event-row:hover .drag-handle{opacity:1}
+  tr.dragging{opacity:.4;background:var(--primary-soft) !important}
+  tr.drop-above td{box-shadow:inset 0 2px 0 var(--primary)}
+
+  .select-styled,.input-styled{border:1px solid transparent;background:transparent;padding:7px 9px;border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);transition:all .15s;width:100%;font-variant-numeric:tabular-nums}
+  .select-styled{padding-right:24px;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%239aa3b2' d='M0 0l5 6 5-6z'/></svg>");background-repeat:no-repeat;background-position:right 8px center}
+  .select-styled:hover,.input-styled:hover{background:var(--bg)}
+  .rollover-row .select-styled:hover,.rollover-row .input-styled:hover{background:rgba(255,255,255,.65)}
+  .select-styled:focus,.input-styled:focus{outline:none;background:#fff;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+  .param-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .param-row .input-styled,.param-row .select-styled{width:auto;min-width:80px;border:1px solid var(--border)}
+  .param-label{font-size:12px;color:var(--text-soft)}
+  .checkbox-label{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-soft);cursor:pointer}
+
+  .pcell{display:flex;flex-direction:column;gap:4px;min-width:150px}
+  .pcell.empty{color:var(--text-faint);font-size:12px}
+  .pcell .equity{font-size:16px;font-weight:700;color:var(--ink);font-family:var(--mono);letter-spacing:-.01em}
+  .pcell .pct-row{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+  .pcell .small{font-size:11.5px;color:var(--text-faint);font-family:var(--mono)}
+  .pcell .pct{font-size:13px;font-weight:700;font-family:var(--mono)}
+  .pcell .bar{height:5px;border-radius:3px;background:#edeff5;overflow:hidden}
+  .pcell .bar>div{height:100%;border-radius:3px;transition:width .35s ease}
+  .pcell .pnl{font-size:12px;font-family:var(--mono);font-weight:600}
+  .pcell .pnl.pos{color:var(--green)}
+  .pcell .pnl.neg{color:var(--red)}
+  .pcell .pnl.zero{color:var(--text-faint)}
+  .pcell .pending{display:inline-block;margin-top:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;width:fit-content;border:1px solid transparent}
+  .pcell .pending.deposit{background:var(--primary-soft);color:var(--primary);border-color:#d6e0f6}
+  .pcell .pending.withdraw{background:var(--red-soft);color:var(--red);border-color:#f3d5d0}
+  .pcell.exited{opacity:.5}
+  .exit-badge{display:inline-block;padding:2px 7px;border-radius:20px;background:#edeff5;color:var(--text-faint);font-size:10px;font-weight:700;vertical-align:middle}
+
+  .gv{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ink)}
+  .gv.unsettled-pos{color:var(--green)}
+  .gv.unsettled-neg{color:var(--red)}
+  .gv.zero{color:var(--text-faint)}
+
+  .formula-toggle{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--border-strong);padding:6px 11px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--text-soft);font-family:inherit;font-weight:600;transition:all .15s}
+  .formula-toggle:hover{background:var(--bg);color:var(--text);border-color:var(--text-faint)}
+  .formula-toggle.active{background:var(--primary-soft);border-color:#c9d5f0;color:var(--primary)}
+  tr.formula-row td{padding:0;background:#fbfcfe;border-bottom:1px solid var(--border)}
+  .formula-content{padding:22px 26px 26px;border-left:3px solid var(--primary);display:grid;grid-template-columns:1fr;gap:18px}
+  .formula-section h4{margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-soft);font-weight:700;display:flex;align-items:center;gap:7px}
+  .formula-section h4 .badge{background:var(--primary);color:#fff;padding:2px 8px;border-radius:5px;font-size:10px}
+  .narrative{color:var(--text);font-size:14px;line-height:1.75;background:#fff;padding:14px 17px;border-radius:9px;border:1px solid var(--border)}
+  .narrative b{color:var(--primary-strong);font-weight:600}
+  .calc-block{background:#fff;padding:16px 18px;border-radius:9px;border:1px solid var(--border);font-family:var(--mono);font-size:12.5px;line-height:1.85;white-space:pre-wrap;color:var(--text)}
+  .calc-block .stage-title{display:block;margin:14px 0 9px;padding:6px 12px;background:var(--primary-soft);color:var(--primary);border-radius:6px;font-weight:700;font-size:12px}
+  .calc-block .stage-title:first-child{margin-top:0}
+  .calc-block .stage-empty{display:block;margin:8px 0;padding:6px 10px;color:var(--text-faint);font-style:italic}
+  .calc-block .tag{display:inline-block;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:700;margin-right:7px}
+  .tag-f{background:var(--primary-soft);color:var(--primary)}
+  .tag-s{background:var(--orange-soft);color:var(--orange)}
+  .tag-v{background:var(--green-soft);color:var(--green)}
+  .tag-step{background:var(--teal-soft);color:var(--teal)}
+  .calc-block{color:#525a6b}
+  .calc-block .t-money{color:var(--primary);font-weight:600}
+  .calc-block .t-pos{color:var(--green);font-weight:600}
+  .calc-block .t-neg{color:var(--red);font-weight:600}
+  .calc-block .t-pct{color:var(--teal);font-weight:600}
+  .calc-block .t-op{color:#aab2c0}
+  .ownership-table{width:100%;border-collapse:collapse;background:#fff;border-radius:9px;overflow:hidden;border:1px solid var(--border)}
+  .ownership-table th,.ownership-table td{padding:9px 13px;text-align:left;font-size:12.5px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+  .ownership-table th{background:#f5f7fc;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:11px}
+  .ownership-table tr:last-child td{border-bottom:none}
+  .ownership-table .arrow{color:var(--text-faint);margin:0 6px}
+  .ownership-table .pct-up{color:var(--green);background:var(--green-soft);padding:2px 7px;border-radius:5px;font-weight:600}
+  .ownership-table .pct-down{color:var(--orange);background:var(--orange-soft);padding:2px 7px;border-radius:5px;font-weight:600}
+  .ownership-table .pct-same{color:var(--text-faint)}
+  .ownership-note{margin-top:11px;font-size:12.5px;color:var(--text-soft);line-height:1.7;background:var(--primary-soft);padding:11px 15px;border-radius:9px;border-left:3px solid var(--primary)}
+
+  .actions-row{display:flex;gap:12px;margin-top:18px;align-items:center}
+  .footer-note{margin-top:24px;color:var(--text-faint);font-size:12px;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .legend-dot{display:inline-flex;align-items:center;gap:6px}
+  .legend-dot::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
+  .warn-banner{color:var(--red);background:var(--red-soft);padding:3px 9px;border-radius:6px;font-size:12px;display:inline-block;margin-top:6px;border:1px solid #f3d5d0}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="accent-bar"></span>
+    <div class="page-header">
+      <h1 class="page-title">Rollover PAMM <span class="grad">推演工具</span></h1>
+      <span class="page-subtitle">持份版 · 每小時 Rollover · 按持份分攤損益</span>
+    </div>
+    <p class="page-desc">
+      投資人持有的是 pool 的<b>持份 %</b> 與對應的<b>結餘</b>（不用 unit / NAV）。每個 Rollover 按固定順序執行：
+      <b>① 用「舊持份」分攤本期損益 → ② 出金（先分潤）→ ③ 入金（分配持份、設 HWM）→ ④ 重算持份</b>。
+      入金經 MS 核准後現金即進主帳戶但<b>暫不分配持份</b>（不參與當期損益），出金亦於<b>下一個 Rollover</b> 生效。performance fee 只在<b>出金時</b>與<b>週期結算</b>對超過個人 HWM 的獲利收取。
+    </p>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="topbar">
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="label">Pool Equity</div>
+        <div class="value" id="g-equity">$0</div>
+        <div class="sublabel">資金池總權益（broker）</div>
+      </div>
+      <div class="stat">
+        <div class="label">已分配結餘</div>
+        <div class="value" id="g-allocated">$0</div>
+        <div class="sublabel">Σ 各投資人結餘</div>
+      </div>
+      <div class="stat">
+        <div class="label">未分攤損益</div>
+        <div class="value" id="g-unsettled">$0</div>
+        <div class="sublabel">待下個 Rollover 分攤</div>
+      </div>
+      <div class="stat">
+        <div class="label">MS Wallet 分潤</div>
+        <div class="value" id="g-wallet">$0</div>
+        <div class="sublabel">累計 performance fee</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="input-group">
+        <label>Fee Rate</label>
+        <div class="input-with-suffix">
+          <input type="number" id="feeRate" value="20" min="0" max="100" step="1">
+          <span class="suffix">%</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Min Investment</label>
+        <div class="input-with-suffix">
+          <span class="prefix">$</span>
+          <input type="number" id="minInv" value="1000" min="0" step="100">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-scroll">
+      <table id="eventTable">
+        <thead><tr id="headerRow"></tr></thead>
+        <tbody id="eventBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="actions-row">
+    <button class="btn btn-primary" onclick="addEvent()">＋ 添加事件</button>
+    <button class="btn btn-ghost" onclick="addInvestor()">＋ 新增 Investor</button>
+    <button class="btn" onclick="resetScenario()">↻ 重置示例</button>
+  </div>
+
+  <div class="footer-note">
+    <span class="legend-dot" style="color: var(--master)">Master</span>
+    <span class="legend-dot" style="color: var(--inv-a)">A</span>
+    <span class="legend-dot" style="color: var(--inv-b)">B</span>
+    <span class="legend-dot" style="color: var(--inv-c)">C</span>
+    <span style="color: var(--text-faint)">·</span>
+    <span style="color: var(--green)">獲利</span>
+    <span style="color: var(--red)">虧損 / 待出金</span>
+    <span style="color: var(--orange)">分潤</span>
+    <span style="color: var(--accent)">待入金</span>
+    <span style="color: var(--text-faint)">·</span>
+    <span style="color: var(--accent); font-weight: 600;">淺藍行 = Rollover</span>
+  </div>
+
+</div>
+
+<script>
+const PARTICIPANT_COLORS = {
+  'Master': 'var(--master)',
+  'Investor A': 'var(--inv-a)',
+  'Investor B': 'var(--inv-b)',
+  'Investor C': 'var(--inv-c)',
+  'Investor D': 'var(--inv-d)',
+};
+const EVENT_TYPES = {
+  deposit_req:  { label: '📥 申請入金（核准進帳）' },
+  withdraw_req: { label: '📤 申請出金（核准）' },
+  pnl:          { label: '📈 Master 交易盈虧' },
+  fee_settle:   { label: '💰 週期分潤結算' },
+  rollover:     { label: '🔄 每小時 Rollover' },
+};
+
+let participants = [];
+let events = [];
+let feeRate = 0.20;
+let minInvestment = 1000;
+let nextPid = 1;
+let nextEid = 1;
+let openFormulas = new Set();
+
+function colorFor(name) { return PARTICIPANT_COLORS[name] || 'var(--text-soft)'; }
+
+function resetScenario() {
+  participants = [
+    { id: 1, name: 'Master',     exited: false },
+    { id: 2, name: 'Investor A', exited: false },
+    { id: 3, name: 'Investor B', exited: false },
+    { id: 4, name: 'Investor C', exited: false },
+  ];
+  nextPid = 5;
+  nextEid = 1;
+  events = [
+    { id: ++nextEid, type: 'deposit_req',  params: { pid: 1, amount: 5000 } },
+    { id: ++nextEid, type: 'deposit_req',  params: { pid: 2, amount: 3000 } },
+    { id: ++nextEid, type: 'deposit_req',  params: { pid: 3, amount: 2000 } },
+    { id: ++nextEid, type: 'rollover',     params: {} },
+    { id: ++nextEid, type: 'pnl',          params: { amount: 1000 } },
+    { id: ++nextEid, type: 'deposit_req',  params: { pid: 4, amount: 2000 } },
+    { id: ++nextEid, type: 'withdraw_req', params: { pid: 3, amount: 0, fullExit: true } },
+    { id: ++nextEid, type: 'rollover',     params: {} },
+  ];
+  openFormulas.clear();
+  document.getElementById('feeRate').value = 20;
+  document.getElementById('minInv').value = 1000;
+  render();
+}
+
+function addInvestor() {
+  const used = new Set(participants.filter(p => p.name.startsWith('Investor')).map(p => p.name));
+  let letter = 'A';
+  for (let c = 65; c < 91; c++) {
+    if (!used.has('Investor ' + String.fromCharCode(c))) { letter = String.fromCharCode(c); break; }
+  }
+  participants.push({ id: nextPid++, name: 'Investor ' + letter, exited: false });
+  render();
+}
+function addEvent() {
+  events.push({ id: ++nextEid, type: 'pnl', params: { amount: 0 } });
+  render();
+}
+function deleteEvent(eid) {
+  events = events.filter(e => e.id !== eid);
+  openFormulas.delete(eid);
+  render();
+}
+
+function computeAll() {
+  const pstate = {};
+  participants.forEach(p => {
+    pstate[p.id] = {
+      id: p.id, name: p.name,
+      balance: 0,        // 結餘（已分配）
+      contributed: 0,    // 淨投入本金（仍在池內）
+      hwm: 0,            // 個人 high-water mark（結餘計）
+      exited: false,
+      pending: null,     // { type:'deposit'|'withdraw', amount, fullExit? }
+    };
+  });
+
+  let poolEquity = 0;    // broker 主帳戶總權益（含待分配現金 + 未分攤損益）
+  let unsettled = 0;     // 本期交易損益，待 rollover 分攤
+  let msWallet = 0;      // 累計 performance fee
+  let rolloverIdx = 0;
+
+  const sumBal = () => Object.values(pstate).reduce((s, p) => s + p.balance, 0);
+  const snapshots = [];
+
+  for (const ev of events) {
+    const before = snapshotState(pstate, poolEquity, unsettled, msWallet, sumBal());
+    const calc = { narrative: '', steps: [], stages: null, warning: null, ownershipNote: '' };
+
+    if (ev.type === 'deposit_req') {
+      const amount = Number(ev.params.amount) || 0;
+      const ps = pstate[ev.params.pid];
+      const allocated = sumBal();
+      if (!ps) {
+        calc.warning = '未選擇 Participant'; calc.narrative = '⚠️ 未選擇 Participant。';
+      } else if (amount <= 0) {
+        calc.warning = '入金金額需 > 0'; calc.narrative = '⚠️ 入金金額需大於 0。';
+      } else if (amount < minInvestment && allocated > 0) {
+        calc.warning = `低於最低入金 $${fmt(minInvestment)}`;
+        calc.narrative = `⚠️ 入金金額 $${fmt(amount)} 低於最低入金 $${fmt(minInvestment)}，申請被拒絕。`;
+      } else {
+        ps.pending = { type: 'deposit', amount };
+        poolEquity += amount;
+        calc.narrative = `${ps.name} 申請入金 $${fmt(amount)}，MS 核准後現金即進 broker 主帳戶（Pool Equity 隨之增加），但<b>暫不分配持份</b>、不參與當期損益；將於下一個 Rollover 才換成持份與結餘。`;
+        calc.steps = [
+          ['現金進帳（待分配）', `${ps.name}: 待入金 $${fmt(amount)}`],
+          ['Pool Equity 增加', `$${fmt(poolEquity - amount)} → $${fmt(poolEquity)}`],
+          ['結餘 / 持份 / 未分攤損益', '本行不變（持份留待 Rollover 分配）'],
+        ];
+        calc.ownershipNote = '本行無持份變化；現金已在帳上但尚未配股，將在下一個 Rollover 第 ③ 步分配。';
+      }
+    }
+    else if (ev.type === 'withdraw_req') {
+      const ps = pstate[ev.params.pid];
+      const fullExit = !!ev.params.fullExit;
+      if (!ps) {
+        calc.warning = '未選擇 Participant'; calc.narrative = '⚠️ 未選擇 Participant。';
+      } else if (ps.balance <= 0) {
+        calc.warning = '無結餘'; calc.narrative = '⚠️ 該 Participant 目前無結餘。';
+      } else {
+        const amount = fullExit ? ps.balance : (Number(ev.params.amount) || 0);
+        if (!fullExit && amount <= 0) {
+          calc.warning = '出金金額需 > 0'; calc.narrative = '⚠️ 出金金額需大於 0。';
+        } else if (!fullExit && amount > ps.balance + 1e-6) {
+          calc.warning = `超過目前結餘 $${fmt(ps.balance)}`;
+          calc.narrative = `⚠️ 申請金額 $${fmt(amount)} 超過目前結餘 $${fmt(ps.balance)}。`;
+        } else {
+          ps.pending = { type: 'withdraw', amount: fullExit ? ps.balance : amount, fullExit };
+          calc.narrative = `${ps.name} 申請${fullExit ? '全額出金' : `出金 $${fmt(amount)}`}，MS 核准後於<b>下一個 Rollover</b> 生效：先分攤該期損益進結餘，再用結餘結算分潤、平倉釋放現金、付款。出金不立即執行，是為了在 Rollover 這個統一時點平倉，不打斷 Master 交易節奏。`;
+          calc.steps = [
+            ['申請排隊（下個 Rollover 生效）', `${ps.name}: 待出金 ${fullExit ? '全額' : '$' + fmt(amount)}`],
+            ['Pool Equity / 結餘 / 持份', '本行不變'],
+          ];
+          calc.ownershipNote = '本行無持份變化，將在下一個 Rollover 第 ② 步執行後更新。';
+        }
+      }
+    }
+    else if (ev.type === 'pnl') {
+      const amount = Number(ev.params.amount) || 0;
+      const eqBefore = poolEquity;
+      poolEquity += amount;
+      unsettled += amount;
+      const allocated = sumBal();
+      calc.narrative = amount === 0
+        ? '本期無交易損益。'
+        : amount > 0
+        ? `Master 本期交易賺了 $${fmt(amount)}。先累積為「未分攤損益」，<b>不立即進任何人的結餘</b>，將於下一個 Rollover 按各人「當下持份」分攤。`
+        : `Master 本期交易虧損 $${fmt(-amount)}。先累積為「未分攤損益」，將於下一個 Rollover 按持份分攤，由持有人共同承擔。`;
+      calc.steps = [
+        ['Pool Equity = 舊 + 交易損益', `$${fmt(eqBefore)} ${amount >= 0 ? '+' : '−'} $${fmt(Math.abs(amount))} = $${fmt(poolEquity)}`],
+        ['未分攤損益累積', `$${fmt(unsettled - amount)} → $${fmt(unsettled)}`],
+      ];
+      if (allocated > 0) {
+        for (const ps of Object.values(pstate)) {
+          if (ps.balance > 0) {
+            const sh = ps.balance / allocated;
+            calc.steps.push([`${ps.name} 預計分到（下個 Rollover）`, `$${fmt(unsettled)} × ${(sh * 100).toFixed(2)}% = ${unsettled >= 0 ? '+' : '−'}$${fmt(Math.abs(unsettled * sh))}`]);
+          }
+        }
+      }
+      calc.ownershipNote = '交易損益不立即改變結餘與持份；要等 Rollover 分攤後，結餘才更新（持份在 Rollover 第 ④ 步重算）。';
+    }
+    else if (ev.type === 'fee_settle') {
+      let totalFee = 0;
+      calc.steps = [];
+      for (const ps of Object.values(pstate)) {
+        if (ps.balance <= 0) continue;
+        const profit = ps.balance - ps.hwm;
+        if (profit > 1e-9) {
+          const fee = profit * feeRate;
+          const balBefore = ps.balance;
+          ps.balance -= fee;
+          poolEquity -= fee;
+          msWallet += fee;
+          ps.hwm = ps.balance;
+          totalFee += fee;
+          calc.steps.push([`${ps.name}: fee = (結餘 − HWM) × ${(feeRate * 100).toFixed(0)}%`,
+            `($${fmt(balBefore)} − $${fmt(balBefore - profit)}) × ${(feeRate * 100).toFixed(0)}% = $${fmt(fee)}　→ 結餘 $${fmt(ps.balance)}，HWM 上調至 $${fmt(ps.hwm)}`]);
+        } else {
+          calc.steps.push([`${ps.name}: 未超過 HWM`, `結餘 $${fmt(ps.balance)} ≤ HWM $${fmt(ps.hwm)} → 不收 fee`]);
+        }
+      }
+      calc.narrative = totalFee > 0
+        ? `週期（每週/每月）分潤結算：對每位投資人「結餘超過個人 HWM」的獲利收 ${(feeRate * 100).toFixed(0)}%，合計 $${fmt(totalFee)} 撥入 MS Wallet，並把各人 HWM 上調到結算後的結餘（之後回吐不重複收）。`
+        : `週期分潤結算：本次無人結餘超過個人 HWM，未收取 performance fee。`;
+      calc.ownershipNote = '分潤會略微降低被收費者的結餘與持份（fee 流出 pool），未獲利者不受影響。';
+    }
+    else if (ev.type === 'rollover') {
+      rolloverIdx++;
+      calc.stages = { alloc: [], withdraw: [], deposit: [], reshare: [] };
+      const allocatedBefore = sumBal();
+
+      // ① 分攤損益（舊持份）
+      if (allocatedBefore > 1e-9 && Math.abs(unsettled) > 1e-9) {
+        calc.stages.alloc.push(['本期未分攤損益 → 按舊持份分攤', `未分攤損益 = $${fmt(unsettled)}，分母（舊已分配結餘）= $${fmt(allocatedBefore)}`]);
+        for (const ps of Object.values(pstate)) {
+          if (ps.balance > 0) {
+            const sh = ps.balance / allocatedBefore;
+            const gain = unsettled * sh;
+            const b0 = ps.balance;
+            ps.balance += gain;
+            calc.stages.alloc.push([`  ${ps.name}: 舊持份 ${(sh * 100).toFixed(2)}%`,
+              `分到 $${fmt(unsettled)} × ${(sh * 100).toFixed(2)}% = ${gain >= 0 ? '+' : '−'}$${fmt(Math.abs(gain))}　→ 結餘 $${fmt(b0)} → $${fmt(ps.balance)}`]);
+          }
+        }
+        unsettled = 0;
+      } else if (Math.abs(unsettled) > 1e-9) {
+        calc.stages.alloc.push(['無已分配結餘可分攤', `未分攤損益 $${fmt(unsettled)} 暫無持有人，順延至下個 Rollover`]);
+      } else {
+        calc.stages.alloc.push(['本期無未分攤損益', '無需分攤']);
+      }
+
+      // ② 出金（先分潤）
+      const withdrawList = Object.values(pstate).filter(ps => ps.pending && ps.pending.type === 'withdraw');
+      if (withdrawList.length === 0) {
+        calc.stages.withdraw.push(['（無排隊出金）', '']);
+      } else {
+        for (const ps of withdrawList) {
+          const req = ps.pending;
+          const balBefore = ps.balance;
+          let amount = req.fullExit ? ps.balance : Math.min(req.amount, ps.balance);
+          const profitAll = ps.balance - ps.hwm;
+          const frac = ps.balance > 0 ? amount / ps.balance : 0;
+          const feeBase = Math.max(0, profitAll) * frac;
+          const fee = feeBase * feeRate;
+          const payout = amount - fee;
+          poolEquity -= amount;
+          msWallet += fee;
+          const eqAfter = poolEquity;
+          ps.balance -= amount;
+          if (req.fullExit || ps.balance < 1e-6) {
+            ps.balance = 0; ps.contributed = 0; ps.hwm = 0; ps.exited = true;
+          } else {
+            const ratio = ps.balance / balBefore;
+            ps.contributed *= ratio;
+            ps.hwm *= ratio;
+          }
+          calc.stages.withdraw.push([`${ps.name} 出金 ${req.fullExit ? '（全額退出）' : '$' + fmt(amount)}`, '']);
+          calc.stages.withdraw.push(['  分潤 = max(0, 結餘 − HWM) × 出金比例 × Fee Rate',
+            `max(0, $${fmt(balBefore)} − $${fmt(ps.exited ? balBefore - profitAll : (balBefore - profitAll))}) × ${(frac * 100).toFixed(1)}% × ${(feeRate * 100).toFixed(0)}% = $${fmt(fee)}`]);
+          calc.stages.withdraw.push(['  實付投資人 = 出金額 − 分潤', `$${fmt(amount)} − $${fmt(fee)} = $${fmt(payout)}（$${fmt(fee)} 撥入 MS Wallet）`]);
+          calc.stages.withdraw.push(['  MS 平倉釋放現金 → Pool Equity 減少', `$${fmt(eqAfter + amount)} → $${fmt(eqAfter)}（釋放 $${fmt(amount)}）`]);
+          calc.stages.withdraw.push(['  該投資人結餘', `$${fmt(balBefore)} → $${fmt(ps.balance)}${ps.exited ? '（退場）' : ''}`]);
+          ps.pending = null;
+        }
+      }
+
+      // ③ 入金（分配持份、設 HWM）
+      const depositList = Object.values(pstate).filter(ps => ps.pending && ps.pending.type === 'deposit');
+      if (depositList.length === 0) {
+        calc.stages.deposit.push(['（無排隊入金）', '']);
+      } else {
+        for (const ps of depositList) {
+          const amount = ps.pending.amount;
+          const b0 = ps.balance, h0 = ps.hwm;
+          const wasNew = ps.balance < 1e-9;
+          ps.balance += amount;
+          ps.contributed += amount;
+          ps.hwm += amount;
+          if (ps.exited) ps.exited = false;
+          calc.stages.deposit.push([`${ps.name} 入金 $${fmt(amount)}`, '']);
+          calc.stages.deposit.push(['  結餘 += 入金（現金先前已進帳）', `$${fmt(b0)} → $${fmt(ps.balance)}`]);
+          calc.stages.deposit.push(['  HWM ' + (wasNew ? '= 入金額' : '+= 入金額（入金不算獲利）'),
+            `$${fmt(h0)} → $${fmt(ps.hwm)}`]);
+          ps.pending = null;
+        }
+      }
+
+      // ④ 重算持份
+      const allocatedAfter = sumBal();
+      if (allocatedAfter > 1e-9) {
+        for (const ps of Object.values(pstate)) {
+          if (ps.balance > 0) {
+            calc.stages.reshare.push([`${ps.name} 新持份`, `$${fmt(ps.balance)} ÷ $${fmt(allocatedAfter)} = ${(ps.balance / allocatedAfter * 100).toFixed(2)}%`]);
+          }
+        }
+        calc.stages.reshare.push(['驗證：Σ 結餘 = Pool Equity', `$${fmt(allocatedAfter)} ${approxEq(allocatedAfter, poolEquity) ? '= $' + fmt(poolEquity) + ' ✓' : '≠ $' + fmt(poolEquity) + ' ⚠'}`]);
+      } else {
+        calc.stages.reshare.push(['（無已分配結餘）', '']);
+      }
+
+      const wnum = withdrawList.length, dnum = depositList.length;
+      calc.narrative = `Rollover #${rolloverIdx}：按固定順序完成四件事 —— ① 把本期未分攤損益用「舊持份」分攤進各人結餘；② 處理 ${wnum} 筆出金（先結算分潤、再平倉釋放現金付款）；③ 處理 ${dnum} 筆入金（現金先前已進帳，這裡才分配持份並設定/調整 HWM）；④ 重算所有人持份，供下一小時使用。順序關鍵：分攤一定排第一，這一小時是靠「舊持份那組人」的錢在跑。`;
+      calc.ownershipNote = '持份變化來自三個因素：出金者退出或減少（自身）、入金者加入帶來稀釋（其他人）、分攤損益等比例放大不改變相對持份。Rollover 後 Σ 結餘應等於 Pool Equity（未分攤損益歸零、待分配現金已配股）。';
+    }
+
+    const after = snapshotState(pstate, poolEquity, unsettled, msWallet, sumBal());
+    snapshots.push({ before, after, calc });
+  }
+
+  participants.forEach(p => { const ps = pstate[p.id]; p.exited = ps ? ps.exited : false; });
+  return { snapshots, finalEquity: poolEquity, finalAllocated: sumBal(), finalUnsettled: unsettled, finalWallet: msWallet };
+}
+
+function snapshotState(pstate, equity, unsettled, msWallet, allocated) {
+  const ps = {};
+  for (const [id, s] of Object.entries(pstate)) {
+    ps[id] = {
+      id: s.id, name: s.name,
+      balance: s.balance,
+      contributed: s.contributed,
+      hwm: s.hwm,
+      pnl: s.balance - s.contributed,
+      share: allocated > 0 ? s.balance / allocated : 0,
+      exited: s.exited,
+      pending: s.pending ? { ...s.pending } : null,
+    };
+  }
+  return { participants: ps, equity, unsettled, msWallet, allocated };
+}
+
+function fmt(n) { if (!isFinite(n)) return '–'; return Number(n).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 }); }
+function fmtPct(n) { if (!isFinite(n)) return '–'; return (n * 100).toFixed(1) + '%'; }
+function approxEq(a, b) { return Math.abs(a - b) < 1e-4; }
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function richText(s) { return escapeHtml(s).replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>'); }
+function hl(s) {
+  s = s.replace(/(\+|−|-)?\$\s?([\d,]+(?:\.\d+)?)/g, function (m, sign, num) {
+    var cls = sign === '+' ? 't-pos' : (sign === '−' || sign === '-') ? 't-neg' : 't-money';
+    return '<span class="' + cls + '">' + (sign || '') + '$' + num + '</span>';
+  });
+  s = s.replace(/(\d[\d,]*(?:\.\d+)?)%/g, '<span class="t-pct">$1%</span>');
+  s = s.replace(/→/g, '<span class="t-op">→</span>');
+  return s;
+}
+
+function render() {
+  feeRate = (parseFloat(document.getElementById('feeRate').value) || 20) / 100;
+  minInvestment = parseFloat(document.getElementById('minInv').value) || 0;
+  const result = computeAll();
+
+  let h = `
+    <th class="col-handle"></th>
+    <th class="col-num">#</th>
+    <th class="col-event">事件</th>
+    <th class="col-params">參數</th>`;
+  participants.forEach(p => {
+    h += `<th class="col-participant"><span style="color:${colorFor(p.name)}">●</span> ${escapeHtml(p.name)}${p.exited ? ' <span class="exit-badge">已退出</span>' : ''}</th>`;
+  });
+  h += `<th class="col-equity">Pool Equity</th><th class="col-unsettled">未分攤損益</th><th class="col-formula">詳解</th><th class="col-del"></th>`;
+  document.getElementById('headerRow').innerHTML = h;
+
+  const body = document.getElementById('eventBody');
+  body.innerHTML = '';
+  let rolloverNum = 0;
+
+  events.forEach((ev, idx) => {
+    const { before, after, calc } = result.snapshots[idx];
+    const tr = document.createElement('tr');
+    tr.className = 'event-row' + (ev.type === 'rollover' ? ' rollover-row' : '');
+    tr.dataset.eid = ev.id;
+    tr.draggable = true;
+
+    let rolloverLabel = '';
+    if (ev.type === 'rollover') { rolloverNum++; rolloverLabel = ` #${rolloverNum}`; }
+
+    let row = `<td class="col-handle"><span class="drag-handle" title="拖拽排序">⋮⋮</span></td>`;
+    row += `<td class="col-num">${idx + 1}</td>`;
+    row += `<td class="col-event"><select class="select-styled" onchange="updateEventType(${ev.id}, this.value)">`;
+    for (const [k, v] of Object.entries(EVENT_TYPES)) {
+      const label = k === 'rollover' && ev.type === 'rollover' ? v.label + rolloverLabel : v.label;
+      row += `<option value="${k}" ${ev.type === k ? 'selected' : ''}>${label}</option>`;
+    }
+    row += `</select></td>`;
+    row += `<td class="col-params">${renderParams(ev)}${calc.warning ? `<div class="warn-banner">⚠ ${escapeHtml(calc.warning)}</div>` : ''}</td>`;
+
+    participants.forEach(p => {
+      const ps = after.participants[p.id];
+      const hasData = ps && (ps.balance > 0.005 || ps.exited || ps.pending);
+      if (!hasData) {
+        row += `<td class="col-participant"><div class="pcell empty">—</div></td>`;
+      } else {
+        const pnlCls = ps.pnl > 0.005 ? 'pos' : ps.pnl < -0.005 ? 'neg' : 'zero';
+        const barColor = colorFor(p.name);
+        const cls = 'pcell' + (ps.exited ? ' exited' : '');
+        let pending = '';
+        if (ps.pending) {
+          const t = ps.pending.type;
+          const labelTxt = t === 'deposit' ? `⏳ 待入金 $${fmt(ps.pending.amount)}` : `⏳ 待出金 ${ps.pending.fullExit ? '(全額)' : '$' + fmt(ps.pending.amount)}`;
+          pending = `<span class="pending ${t}" title="將在下個 Rollover 處理">${labelTxt}</span>`;
+        }
+        const exitBadge = ps.exited ? ' <span class="exit-badge">已退出</span>' : '';
+        row += `<td class="col-participant"><div class="${cls}">
+          <div class="equity">$${fmt(ps.balance)}${exitBadge}</div>
+          <div class="pct-row">
+            <span class="small">持份</span>
+            <span class="pct" style="color:${barColor}">${fmtPct(ps.share)}</span>
+          </div>
+          <div class="bar"><div style="width:${(ps.share * 100).toFixed(2)}%;background:${barColor};opacity:0.85"></div></div>
+          <div class="pnl ${pnlCls}">P&L ${ps.pnl >= 0 ? '+' : '−'}$${fmt(Math.abs(ps.pnl))}</div>
+          ${ps.balance > 0.005 ? `<div class="small">HWM $${fmt(ps.hwm)}</div>` : ''}
+          ${pending}
+        </div></td>`;
+      }
+    });
+
+    row += `<td class="col-equity"><span class="gv">$${fmt(after.equity)}</span></td>`;
+    const uCls = after.unsettled > 0.005 ? 'unsettled-pos' : after.unsettled < -0.005 ? 'unsettled-neg' : 'zero';
+    row += `<td class="col-unsettled"><span class="gv ${uCls}">${after.unsettled >= 0 ? '' : '−'}$${fmt(Math.abs(after.unsettled))}</span></td>`;
+    const isOpen = openFormulas.has(ev.id);
+    row += `<td class="col-formula"><button class="formula-toggle ${isOpen ? 'active' : ''}" onclick="toggleFormula(${ev.id})">📐 ${isOpen ? '收起' : '展開'}</button></td>`;
+    row += `<td class="col-del"><button class="btn-icon" onclick="deleteEvent(${ev.id})" title="刪除">✕</button></td>`;
+
+    tr.innerHTML = row;
+    body.appendChild(tr);
+
+    if (isOpen) {
+      const ftr = document.createElement('tr');
+      ftr.className = 'formula-row';
+      const colspan = 8 + participants.length;
+      ftr.innerHTML = `<td colspan="${colspan}">${renderFormulaPanel(ev, before, after, calc)}</td>`;
+      body.appendChild(ftr);
+    }
+  });
+
+  document.getElementById('g-equity').textContent = '$' + fmt(result.finalEquity);
+  document.getElementById('g-allocated').textContent = '$' + fmt(result.finalAllocated);
+  document.getElementById('g-unsettled').textContent = (result.finalUnsettled < 0 ? '−$' : '$') + fmt(Math.abs(result.finalUnsettled));
+  document.getElementById('g-wallet').textContent = '$' + fmt(result.finalWallet);
+
+  attachDragHandlers();
+}
+
+function renderFormulaPanel(ev, before, after, calc) {
+  let stepsHtml = '';
+  if (calc.stages) {
+    const renderStage = (title, items) => {
+      let h = `<span class="stage-title">${title}</span>`;
+      if (!items.length) { h += '<span class="stage-empty">—</span>'; return h; }
+      items.forEach(([f, s]) => {
+        if (f) h += `<div><span class="tag ${f.startsWith('  ') ? 'tag-step' : 'tag-f'}">${f.startsWith('  ') ? '步驟' : '公式'}</span>${hl(escapeHtml(f))}</div>`;
+        if (s) h += `<div><span class="tag tag-s">代入</span>${hl(escapeHtml(s))}</div>`;
+      });
+      return h;
+    };
+    stepsHtml += renderStage('═══ ① 分攤本期損益（舊持份）═══', calc.stages.alloc);
+    stepsHtml += renderStage('═══ ② 執行排隊出金（先分潤）═══', calc.stages.withdraw);
+    stepsHtml += renderStage('═══ ③ 執行排隊入金（分配持份、設 HWM）═══', calc.stages.deposit);
+    stepsHtml += renderStage('═══ ④ 重算持份 ═══', calc.stages.reshare);
+  } else {
+    calc.steps.forEach(([f, s]) => {
+      if (!f) return;
+      stepsHtml += `<div><span class="tag tag-f">公式</span>${hl(escapeHtml(f))}</div>`;
+      if (s) stepsHtml += `<div><span class="tag tag-s">代入</span>${hl(escapeHtml(s))}</div>`;
+      stepsHtml += `<div style="height:6px"></div>`;
+    });
+  }
+
+  let ownerRows = '';
+  participants.forEach(p => {
+    const b = before.participants[p.id];
+    const a = after.participants[p.id];
+    if (!b && !a) return;
+    if ((!b || (b.balance < 0.005 && !b.exited)) && (!a || (a.balance < 0.005 && !a.exited))) return;
+    const bPct = b ? b.share : 0;
+    const aPct = a ? a.share : 0;
+    const delta = aPct - bPct;
+    let cls = 'pct-same', sym = '·';
+    if (delta > 0.0005) { cls = 'pct-up'; sym = '↑'; }
+    else if (delta < -0.0005) { cls = 'pct-down'; sym = '↓'; }
+    const reason = explainOwnership(ev, p, b, a, delta);
+    ownerRows += `<tr>
+      <td><span style="color:${colorFor(p.name)}">●</span> ${escapeHtml(p.name)}</td>
+      <td>${fmtPct(bPct)}</td>
+      <td class="arrow">→</td>
+      <td><span class="${cls}">${fmtPct(aPct)} ${sym}</span></td>
+      <td style="color:var(--text-soft)">${escapeHtml(reason)}</td>
+    </tr>`;
+  });
+
+  return `<div class="formula-content">
+    <div class="formula-section">
+      <h4><span class="badge">1</span> 發生了什麼</h4>
+      <div class="narrative">${richText(calc.narrative)}</div>
+    </div>
+    <div class="formula-section">
+      <h4><span class="badge">2</span> ${calc.stages ? '逐步計算（四階段）' : '公式與計算過程'}</h4>
+      <div class="calc-block">${stepsHtml || '<span style="color:var(--text-faint)">—</span>'}</div>
+    </div>
+    <div class="formula-section">
+      <h4><span class="badge">3</span> 持份變化</h4>
+      <table class="ownership-table">
+        <thead><tr><th>Participant</th><th>事件前</th><th></th><th>事件後</th><th>說明</th></tr></thead>
+        <tbody>${ownerRows || '<tr><td colspan="5" style="color:var(--text-faint);text-align:center">無變化</td></tr>'}</tbody>
+      </table>
+      ${calc.ownershipNote ? `<div class="ownership-note">${escapeHtml(calc.ownershipNote)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function explainOwnership(ev, p, b, a, delta) {
+  if (!b || (b.balance < 0.005 && !b.exited)) return a && a.balance > 0.005 ? '新分配持份' : '';
+  if (a && a.exited && (!b || !b.exited)) return '本次已退出';
+  if (Math.abs(delta) < 0.0005) {
+    if (ev.type === 'pnl' || ev.type === 'deposit_req' || ev.type === 'withdraw_req') return '本行不變（損益/排隊不動持份）';
+    return '持份未變';
+  }
+  if (ev.type === 'rollover') {
+    if (a.balance < b.balance - 1e-6) return '自身出金，持份下降';
+    if (a.balance > b.balance + 1e-6) return '自身入金，獲得新持份';
+    return '他人入/出金導致相對持份變化';
+  }
+  if (ev.type === 'fee_settle') return '被收分潤，結餘略降';
+  return '';
+}
+
+function renderParams(ev) {
+  const p = ev.params; const eid = ev.id;
+  if (ev.type === 'deposit_req') {
+    return `<div class="param-row">${participantSelect(eid, p.pid)}
+      <span class="param-label">金額</span>
+      <input type="number" class="input-styled" style="width:100px" value="${p.amount || 0}" onchange="updateParam(${eid}, 'amount', this.value)">
+      <span class="param-label">$</span></div>`;
+  }
+  if (ev.type === 'withdraw_req') {
+    return `<div class="param-row">${participantSelect(eid, p.pid)}
+      <span class="param-label">金額</span>
+      <input type="number" class="input-styled" style="width:100px" value="${p.amount || 0}" onchange="updateParam(${eid}, 'amount', this.value)" ${p.fullExit ? 'disabled' : ''}>
+      <span class="param-label">$</span>
+      <label class="checkbox-label"><input type="checkbox" ${p.fullExit ? 'checked' : ''} onchange="updateParam(${eid}, 'fullExit', this.checked)"> 全額退出</label>
+    </div>`;
+  }
+  if (ev.type === 'pnl') {
+    return `<div class="param-row"><span class="param-label">本期交易盈虧</span>
+      <input type="number" class="input-styled" style="width:120px" value="${p.amount || 0}" onchange="updateParam(${eid}, 'amount', this.value)">
+      <span class="param-label">$（負數=虧損）</span></div>`;
+  }
+  if (ev.type === 'fee_settle') {
+    return `<span class="param-label" style="color:var(--text-faint)">對所有投資人「結餘 − 個人 HWM」的獲利收 ${(feeRate * 100).toFixed(0)}%</span>`;
+  }
+  if (ev.type === 'rollover') {
+    return `<span class="param-label" style="color:var(--text-faint)">自動執行：① 分攤損益 → ② 出金 → ③ 入金 → ④ 重算持份</span>`;
+  }
+  return '';
+}
+
+function participantSelect(eid, selectedPid) {
+  let html = `<select class="select-styled" style="width:auto;min-width:140px" onchange="updateParam(${eid}, 'pid', parseInt(this.value))">`;
+  html += `<option value="">— 選擇 —</option>`;
+  participants.forEach(p => {
+    html += `<option value="${p.id}" ${p.id === selectedPid ? 'selected' : ''}>${escapeHtml(p.name)}</option>`;
+  });
+  html += `</select>`;
+  return html;
+}
+
+function updateEventType(eid, type) {
+  const ev = events.find(e => e.id === eid);
+  if (!ev) return;
+  ev.type = type;
+  const firstPid = participants[0] && participants[0].id;
+  if (type === 'deposit_req') ev.params = { pid: ev.params.pid || firstPid, amount: 0 };
+  else if (type === 'withdraw_req') ev.params = { pid: ev.params.pid || firstPid, amount: 0, fullExit: true };
+  else if (type === 'pnl') ev.params = { amount: 0 };
+  else if (type === 'fee_settle') ev.params = {};
+  else if (type === 'rollover') ev.params = {};
+  render();
+}
+
+function updateParam(eid, key, value) {
+  const ev = events.find(e => e.id === eid);
+  if (!ev) return;
+  if (key === 'amount') value = Number(value);
+  ev.params[key] = value;
+  render();
+}
+
+function toggleFormula(eid) {
+  if (openFormulas.has(eid)) openFormulas.delete(eid);
+  else openFormulas.add(eid);
+  render();
+}
+
+document.getElementById('feeRate').addEventListener('input', render);
+document.getElementById('minInv').addEventListener('input', render);
+
+let dragSrcId = null;
+function attachDragHandlers() {
+  document.querySelectorAll('#eventBody tr.event-row').forEach(tr => {
+    tr.addEventListener('dragstart', () => { dragSrcId = parseInt(tr.dataset.eid); tr.classList.add('dragging'); });
+    tr.addEventListener('dragend', () => {
+      tr.classList.remove('dragging');
+      document.querySelectorAll('tr.drop-above').forEach(r => r.classList.remove('drop-above'));
+    });
+    tr.addEventListener('dragover', e => {
+      e.preventDefault();
+      document.querySelectorAll('tr.drop-above').forEach(r => r.classList.remove('drop-above'));
+      tr.classList.add('drop-above');
+    });
+    tr.addEventListener('drop', e => {
+      e.preventDefault();
+      const destId = parseInt(tr.dataset.eid);
+      if (dragSrcId === destId) return;
+      const srcIdx = events.findIndex(ev => ev.id === dragSrcId);
+      const dstIdx = events.findIndex(ev => ev.id === destId);
+      if (srcIdx < 0 || dstIdx < 0) return;
+      const [moved] = events.splice(srcIdx, 1);
+      events.splice(dstIdx, 0, moved);
+      render();
+    });
+  });
+}
+
+resetScenario();
+</script>
+
+</body>
+</html>
