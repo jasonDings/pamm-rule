@@ -32,9 +32,15 @@
   header.top h1 .accent{background:linear-gradient(90deg,#3a5bb0,#2f897c);
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
   header.top p{margin:8px 0 0;color:var(--muted);font-size:14px}
+  nav.toc{position:sticky;top:0;z-index:20;background:rgba(244,245,247,.92);
+    backdrop-filter:blur(10px);border-bottom:1px solid #dbe3f0;box-shadow:0 1px 0 rgba(20,28,40,.03)}
+  nav.toc .wrap{display:flex;flex-wrap:wrap;gap:6px;padding:11px 22px}
+  nav.toc a{font-size:13px;color:var(--muted);text-decoration:none;padding:6px 13px;border-radius:999px;
+    border:1px solid #e3e9f4;background:rgba(255,255,255,.6);transition:.15s}
+  nav.toc a:hover{background:#fff;color:var(--primary);border-color:#c7d4ef;box-shadow:0 2px 7px rgba(20,28,40,.08)}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
-    padding:24px 28px;margin:20px 0;box-shadow:0 1px 3px rgba(20,28,40,.05)}
+    padding:24px 28px;margin:20px 0;box-shadow:0 1px 3px rgba(20,28,40,.05);scroll-margin-top:64px}
   .card-head{display:flex;align-items:center;gap:11px;margin-bottom:8px}
   .card-head .dot{width:11px;height:11px;border-radius:4px;flex:none}
   .card-head h2{font-size:20px;margin:0;color:var(--head);font-weight:700;line-height:1.4}
@@ -91,30 +97,43 @@
   </div>
 </header>
 
+<nav class="toc">
+  <div class="wrap">
+    <a href="#intro">1・一句話</a>
+    <a href="#terms">2・名詞速查</a>
+    <a href="#core">3・核心關係</a>
+    <a href="#io">4・出入金</a>
+    <a href="#rollover">5・Rollover</a>
+    <a href="#fee">6・分潤</a>
+  </div>
+</nav>
+
 <div class="wrap">
 
   <!-- 一句話 -->
-  <div class="card">
+  <div class="card" id="intro">
     <div class="card-head"><span class="dot" style="background:var(--gray)"></span><h2>一句話說明</h2></div>
     <div class="desc">把所有投資人的錢合成<b>一個資金池（Pool）</b>交給 Master Signal 操盤。投資人不在 broker 開自己的單，而是持有這個池子的一個<b>比例（Share）</b>；他那一份現在值多少，就是他的 <b>個人 Equity</b>。池子<b>每小時結算一次（Rollover）</b>，在那一刻把這一小時的賺賠按比例分給大家、處理出入金、結算分潤。</div>
   </div>
 
   <!-- 名詞速查 -->
-  <div class="card">
+  <div class="card" id="terms">
     <div class="card-head"><span class="dot" style="background:var(--gray)"></span><h2>名詞速查（Key Terms）</h2></div>
     <div class="gloss">
       <div class="row"><div class="k">Pool Equity<small>資金池總權益</small></div><div class="v">整個池現在值多少（broker 主帳戶權益，含未平倉的 Floating P&amp;L）＝ 全部投資人 Equity 加總。</div></div>
       <div class="row"><div class="k">個人 Equity<small>投資人權益</small></div><div class="v">某位投資人「那一份」現在值多少（含他應分到的浮動損益，隨 Rollover 變動）。</div></div>
       <div class="row"><div class="k">Share<small>持份比例</small></div><div class="v">某位投資人佔整個池的百分比 ＝ 個人 Equity ÷ Pool Equity。</div></div>
+      <div class="row"><div class="k">成本基礎<small>Cost Basis</small></div><div class="v">投資人投入的本金（淨入金；入金時增加、出金時按比例減少）。</div></div>
+      <div class="row"><div class="k">累計獲利<small>Profit</small></div><div class="v">個人 Equity − 成本基礎，也就是他目前帳上賺了多少。</div></div>
+      <div class="row"><div class="k">HWM<small>High-Water Mark</small></div><div class="v">已被收過分潤的「累計獲利」最高點，只升不降；分潤只對<b>超過它的新獲利</b>收，虧損／回吐不收。<b>改用「獲利」衡量，不是 equity 水位。</b></div></div>
       <div class="row"><div class="k">Floating P&amp;L<small>浮動損益</small></div><div class="v">未平倉部位的帳面賺賠，隨報價即時變動。</div></div>
-      <div class="row"><div class="k">HWM<small>High-Water Mark</small></div><div class="v">個人獲利的歷史高點；分潤只對「超過這條線」的獲利收，虧損不收。</div></div>
-      <div class="row"><div class="k">Performance Fee<small>分潤</small></div><div class="v">付給 Master Signal 的績效獎金（例：獲利的 20%）。</div></div>
+      <div class="row"><div class="k">Performance Fee<small>分潤</small></div><div class="v">付給 Master Signal 的績效獎金（例：新獲利的 20%）。</div></div>
       <div class="row"><div class="k">Rollover<small>每小時結算點</small></div><div class="v">系統唯一的結算時刻：分攤損益、處理出入金、結算分潤。</div></div>
     </div>
   </div>
 
   <!-- 核心關係 -->
-  <div class="card">
+  <div class="card" id="core">
     <div class="card-head"><span class="dot" style="background:var(--primary-strong)"></span><h2>Equity 與 Share（同一件事的兩種看法）</h2></div>
     <div class="desc">全系統都以 <b>Equity（mark-to-market、含浮動損益）</b> 估值，不用「只算已實現」的 Balance。每個人的權益有兩種表達方式：<b>個人 Equity</b>（那一份值多少錢）和 <b>Share</b>（佔整個池子的比例）。帳上<b>逐筆記錄每個人的 Equity</b>、每個 Rollover 更新；<b>Share 由 Equity 換算</b>而來，用在 Rollover 時「按比例分攤損益」。所以下面兩條不是循環，而是同一筆權益的「比例面」與「金額面」。</div>
     <div class="formula">Share       = 個人 Equity ÷ Pool Equity     <span class="fx">← 比例面：他佔池子幾 %</span>
@@ -124,7 +143,7 @@
   </div>
 
   <!-- 出入金 -->
-  <div class="card">
+  <div class="card" id="io">
     <div class="card-head"><span class="dot" style="background:var(--primary)"></span><h2>出入金（Deposit &amp; Withdrawal）</h2></div>
 
     <h4 class="label-teal">入金 Deposit</h4>
@@ -132,19 +151,20 @@
     <div class="formula"><span class="fx">（在 Rollover 入金時執行）</span>
 新 個人 Equity = 舊 個人 Equity + Deposit
 新 Pool Equity = 舊 Pool Equity + Deposit
-新 HWM         = 舊 HWM + Deposit       <span class="fx">← 入金不算獲利；全新投資人 HWM = Deposit</span></div>
-    <div class="example"><span class="ex-tag">範例</span>C 在 Pool Equity $8,800 時入金 $2,000 → 個人 Equity = <b>$2,000</b>、Pool Equity = 8,800 + 2,000 = <b>$10,800</b>、HWM = <b>$2,000</b>、Share ≈ 2,000 ÷ 10,800 = <b>18.52%</b>。</div>
+新 成本基礎     = 舊 成本基礎 + Deposit   <span class="fx">← 入金算本金、不算獲利（HWM不變）</span></div>
+    <div class="example"><span class="ex-tag">範例</span>C 在 Pool Equity $8,800 時入金 $2,000 → 個人 Equity = <b>$2,000</b>、Pool Equity = 8,800 + 2,000 = <b>$10,800</b>、成本基礎 = <b>$2,000</b>、HWM = $0、Share ≈ 2,000 ÷ 10,800 = <b>18.52%</b>。</div>
 
     <h4 class="label-teal">出金 Withdrawal</h4>
     <div class="desc">投資人提出出金，Master Signal 核准，於<b>下一個 Rollover 生效</b>。生效時：先把這一小時的損益分給他、再結算分潤、最後付款。Master Signal 須在該 Rollover 前先平倉、備好現金。</div>
-    <div class="formula">Performance Fee = max(0, 個人 Equity − HWM) × 出金比例 × Fee Rate   <span class="fx">（全額出金時比例 = 100%）</span>
+    <div class="formula">累計獲利        = 個人 Equity − 成本基礎
+Performance Fee = max(0, 累計獲利 − HWM) × 出金比例 × Fee Rate   <span class="fx">（全額出金時比例 = 100%）</span>
 實付金額         = 出金金額 − Performance Fee
 新 Pool Equity   = 舊 Pool Equity − 出金金額          <span class="fx">← Performance Fee 撥入 MS Wallet</span></div>
-    <div class="example"><span class="ex-tag">範例</span>B 的 Equity $2,200、HWM $2,000、Fee Rate 20% → Performance Fee = (2,200 − 2,000) × 100% × 20% = <b>$40</b>，實付 = 2,200 − 40 = <b>$2,160</b>。</div>
+    <div class="example"><span class="ex-tag">範例</span>B 成本基礎 $2,000、Equity $2,200、HWM $0 → 累計獲利 = 2,200 − 2,000 = $200 → Performance Fee = (200 − 0) × 100% × 20% = <b>$40</b>，實付 = 2,200 − 40 = <b>$2,160</b>。</div>
   </div>
 
   <!-- 每小時 Rollover -->
-  <div class="card">
+  <div class="card" id="rollover">
     <div class="card-head"><span class="dot" style="background:var(--teal)"></span><h2>每小時 Rollover 流程（固定順序，不可調換）</h2></div>
     <div class="desc">以下四步以同一情境貫穿：<b>起始 Pool Equity $10,000</b>（Master 50% = $5,000、A 30% = $3,000、B 20% = $2,000），<b>本期交易賺 +$1,000</b>，<b>B 申請全額出金</b>、<b>C 申請入金 $2,000</b>（均已核准），Fee Rate 20%。</div>
 
@@ -164,11 +184,11 @@
       <span class="stepn">2</span>
       <div class="body">
         <h4>處理出金（Process Withdrawals）</h4>
-        <div class="desc">逐筆結算分潤、付款、扣減 Equity，全額者退場。分潤基礎是「分攤後」的 Equity。</div>
-        <div class="formula">Performance Fee = max(0, 個人 Equity − HWM) × 出金比例 × Fee Rate
+        <div class="desc">逐筆結算分潤、付款、扣減 Equity，全額者退場。分潤只收「超過HWM的新獲利」。</div>
+        <div class="formula">Performance Fee = max(0, 累計獲利 − HWM) × 出金比例 × Fee Rate
 新 個人 Equity  = 舊 個人 Equity − 出金金額
 新 Pool Equity  = 舊 Pool Equity − 出金金額</div>
-        <div class="example"><span class="ex-tag">範例</span>B Equity $2,200、HWM $2,000 → Performance Fee = (2,200 − 2,000) × 20% = <b>$40</b>，實付 <b>$2,160</b>；Pool Equity 11,000 → <b>$8,800</b>，B 退場。</div>
+        <div class="example"><span class="ex-tag">範例</span>B 成本基礎 $2,000、Equity $2,200、HWM $0 → 累計獲利 $200 → Performance Fee = 200 × 20% = <b>$40</b>，實付 <b>$2,160</b>；Pool Equity 11,000 → <b>$8,800</b>，B 退場。</div>
       </div>
     </div>
 
@@ -176,11 +196,11 @@
       <span class="stepn">3</span>
       <div class="body">
         <h4>處理入金（Process Deposits）</h4>
-        <div class="desc">把待入金的資金正式進池、分配 Share、設定／調整 HWM。</div>
+        <div class="desc">把待入金的資金正式進池、分配 Share、把入金加進成本基礎。</div>
         <div class="formula">新 個人 Equity = 舊 個人 Equity + Deposit
 新 Pool Equity = 舊 Pool Equity + Deposit
-新 HWM         = 舊 HWM + Deposit   <span class="fx">（全新投資人 HWM = Deposit）</span></div>
-        <div class="example"><span class="ex-tag">範例</span>C 入金 $2,000 → Equity <b>$2,000</b>、Pool Equity 8,800 → <b>$10,800</b>、HWM <b>$2,000</b>。</div>
+新 成本基礎     = 舊 成本基礎 + Deposit   <span class="fx">（HWM不變）</span></div>
+        <div class="example"><span class="ex-tag">範例</span>C 入金 $2,000 → Equity <b>$2,000</b>、Pool Equity 8,800 → <b>$10,800</b>、成本基礎 <b>$2,000</b>、HWM $0。</div>
       </div>
     </div>
 
@@ -197,14 +217,15 @@
   </div>
 
   <!-- 分潤 -->
-  <div class="card">
+  <div class="card" id="fee">
     <div class="card-head"><span class="dot" style="background:var(--amber)"></span><h2>分潤（Performance Fee）</h2></div>
-    <div class="desc">以<b>「分攤後」的個人 Equity</b> 為基礎（付款與收費用同一個估值點，公平一致）。部分出金採<b>部分分潤（pro-rata）</b>，並把 HWM 等比例調低，剩下還在池裡的獲利留待之後再收。結算時點：<b>出金時 ＋ 每週／每月</b>；只對超過個人 HWM 的獲利收，虧損不收、回本期間不重複收。</div>
-    <div class="formula"><span class="fh">全額出金：</span>Performance Fee = max(0, 個人 Equity − HWM) × Fee Rate
-<span class="fh">部分出金：</span>Performance Fee = max(0, 個人 Equity − HWM) × (出金金額 ÷ 個人 Equity) × Fee Rate
-          新 HWM = 原 HWM × (剩餘 Equity ÷ 原 Equity)</div>
-    <div class="example"><span class="ex-tag">範例 · 全額</span>個人 Equity $12,100、HWM $10,000 → Performance Fee = (12,100 − 10,000) × 20% = <b>$420</b>，實拿 <b>$11,680</b>。</div>
-    <div class="example"><span class="ex-tag">範例 · 部分</span>個人 Equity $12,000、HWM $10,000，領一半 $6,000 → Performance Fee = (12,000 − 10,000) × (6,000 ÷ 12,000) × 20% = <b>$200</b>；新 HWM = 10,000 × (6,000 ÷ 12,000) = <b>$5,000</b>。</div>
+    <div class="desc">原則一句話：<b>只對「還沒被收過分潤的新獲利」抽成</b>。每位投資人記兩個數——<b>成本基礎</b>（本金）與 <b>HWM</b>（已被收過分潤的獲利高水位，只升不降）。先算累計獲利，再對「超過HWM」的部分收；虧損或回吐不收、回本期間不重複收。結算時點：<b>出金時 ＋ 每週／每月</b>。部分出金採 <b>pro-rata</b>：按出金比例對新獲利收費，並把成本基礎與HWM同比例縮小。</div>
+    <div class="formula">累計獲利         = 個人 Equity − 成本基礎
+Performance Fee = max(0, 累計獲利 − HWM) × Fee Rate      <span class="fx">← 只收「新獲利」</span>
+收費後 → HWM = max(HWM, 累計獲利)                <span class="fx">← 高水位只升不降</span></div>
+    <div class="example"><span class="ex-tag">範例 · 收費</span>成本基礎 $10,000、Equity $12,100、HWM $0 → 累計獲利 $2,100 → Performance Fee = (2,100 − 0) × 20% = <b>$420</b>，實拿 <b>$11,680</b>；HWM更新為 $2,100。</div>
+    <div class="example"><span class="ex-tag">範例 · 回吐不重複收</span>（同一投資人續抱）回檔到 $11,000 不收；之後再漲到 $13,000 → 累計獲利 $3,000、HWM $2,100 → 只對新增的 (3,000 − 2,100) = $900 收 = <b>$180</b>。</div>
+    <div class="example"><span class="ex-tag">範例 · 部分出金</span>成本基礎 $10,000、Equity $12,000、HWM $0，領一半 $6,000 → Performance Fee = (12,000 − 10,000 − 0) × (6,000 ÷ 12,000) × 20% = <b>$200</b>；之後成本基礎 → $5,000、HWM → $0（均 ×½）。</div>
   </div>
 
 </div>
